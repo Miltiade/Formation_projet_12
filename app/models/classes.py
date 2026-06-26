@@ -9,7 +9,7 @@ from argon2 import PasswordHasher, exceptions
 
 ph = PasswordHasher()
 
----------------------------------
+# ---------------------------------
 
 class Department:
     """
@@ -38,7 +38,7 @@ class Department:
     def __repr__(self):
         return f"Department(name={self.name!r})"
 
----------------------------------
+# ---------------------------------
 
 class Collaborator:
     """An employee of Epic Events.
@@ -68,7 +68,7 @@ class Collaborator:
     def __repr__(self):
         return f"Collaborator(id={self.id}, username={self.username!r}, role={self.role!r})"
 
----------------------------------
+# ---------------------------------
 
 class Client:
     """A client of Epic Events, managed by a commercial collaborator."""
@@ -86,7 +86,7 @@ class Client:
     def __repr__(self):
         return f"Client(full_name={self.full_name!r}, company={self.company_name!r})"
 
----------------------------------
+# ---------------------------------
 
 class Contract:
     """A contract between Epic Events and a client. May be signed or unsigned.
@@ -109,7 +109,7 @@ class Contract:
     def __repr__(self):
         return f"Contract(id={self.id}, total={self.total_amount}, signed={self.is_signed})"
 
----------------------------------
+# ---------------------------------
 
 class Event:
     """An event organized by Epic Events, created from a signed contract.
