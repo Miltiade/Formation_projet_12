@@ -1,7 +1,7 @@
 """
 Data models for the Epic Events CRM application.
 SQL injection rule: ALWAYS use %s placeholders and pass values
-as a separate tuple to cursor.execute(). NEVER use f-strings
+as a separate tuple to cursor.execute(). NEVER (EVER) use f-strings
 or string concatenation in SQL queries.
 """
 import hmac
@@ -9,10 +9,11 @@ import hmac
 ---------------------------------
 
 class Department:
-"""A department within the organization.
-Allowed: Gestion, Commercial, Support.
-Each department maps to a role.
-"""
+    """
+    A department within the organization.
+    Allowed: Gestion, Commercial, Support.
+    Each department maps to a role.
+    """
 
 ROLES = {
     "Gestion": "gestion",
@@ -37,10 +38,10 @@ def __repr__(self):
 ---------------------------------
 
 class Collaborator:
-"""An employee of Epic Events.
-Password is name-mangled (__password) and never exposed.
-Use verify_password() to check a candidate against the stored hash.
-"""
+    """An employee of Epic Events.
+    Password is name-mangled (__password) and never exposed.
+    Use verify_password() to check a candidate against the stored hash.
+    """
 
 def __init__(self, id: int, username: str, email:str, password: str, department: Department):
     self.id = id
@@ -64,7 +65,7 @@ def __repr__(self):
 ---------------------------------
 
 class Client:
-"""A client of Epic Events, managed by a commercial collaborator."""
+    """A client of Epic Events, managed by a commercial collaborator."""
 def __init__(self, full_name: str, email: str, phone: str,
              company_name: str, creation_date: str, last_update_date: str,
              commercial_contact: Collaborator):
@@ -82,10 +83,11 @@ def __repr__(self):
 ---------------------------------
 
 class Contract:
-"""A contract between Epic Events and a client. May be signed or unsigned.
-Per the spec, the commercial contact is stored directly on the contract
-(it is the commercial associated with the client).
-"""
+    """A contract between Epic Events and a client. May be signed or unsigned.
+    Per the spec, the 'commercial contact' 
+    (i.e.: commercial collaborator associated with the client) 
+    is stored directly on the contract.    
+    """
 
 def __init__(self, id: int, total_amount: float, remaining_amount: float,
              creation_date: str, is_signed: bool, client: Client,
@@ -104,10 +106,10 @@ def __repr__(self):
 ---------------------------------
 
 class Event:
-"""An event organized by Epic Events, created from a signed contract.
-Per the spec, the event carries its own client_name and client_contact
-fields, as well as a name. support_contact may be None if not yet assigned.
-"""
+    """An event organized by Epic Events, created from a signed contract.
+    Per the spec, the event carries its own 'client_name' and 'client_contact'
+    fields, as well as a 'name'. 'support_contact' may be None if not yet assigned.
+    """
 
 def __init__(self, name: str, id: int, client_name: str,
              client_contact: str, date_start: str, date_end: str,
