@@ -59,7 +59,7 @@ class Collaborator:
         return self.department.role
 
     def verify_password(self, candidate: str) -> bool:
-        """Check a candidate password hash against stored password's hash."""
+        """Check candidate password's hash against stored password's hash."""
         try:
             return ph.verify(self.__password_hash, candidate)
         except exceptions.VerifyMismatchError:
