@@ -19,7 +19,7 @@ class UserManager:
         conn.close()
         return user
 
-    def authenticate(self, email: str, password: str):
+    def authenticate(self, email: str, password: str) -> Collaborator | None:
         """Cherche un utilisateur par email et vérifie le mot de passe."""
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -33,7 +33,32 @@ class UserManager:
             return None  # email non trouvé
         
         id, username, email, password_hash, department_name = row
+        department = Department(department_name)
+
+        # Créez l'utilisateur sans recalculer le hash dans __init__
+        user = Collaborator(id=id, username=username, email=email, password=password_hash, department=department)
+        # Remplacez le hash généré par le hash en base
+        user._Collaborator__password_hash = password_hash
+
+        if user.verify_password(password):
+            return user
+        else:
+            return None
 
     def get_all_users(self) -> list[Collaborator]:
-        """Retourne la liste des utilisateurs."""
-        return self._users
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        sql = "SELECT id, username, email, password_hash, department FROM collaborators"
+        cursor.execute(sql)
+        rows = cursor.fetchall()
+        cursor.close()
+        conn.close()
+
+        users = []
+        for row in rows:
+            id, username, email, password_hash, department_name = row
+            department = Department(department_name)
+            user = Collaborator(id=id, username=username, email=email, password=password_hash, department=department)
+            user._Collaborator__password_hash = password_hash
+            users.append(user)
+        return users
