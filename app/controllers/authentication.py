@@ -18,3 +18,22 @@ class UserManager:
         cursor.close()
         conn.close()
         return user
+
+    def authenticate(self, email: str, password: str):
+        """Cherche un utilisateur par email et vérifie le mot de passe."""
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        sql = "SELECT id, username, email, password_hash, department FROM collaborators WHERE email = %s"
+        cursor.execute(sql, (email,))
+        row = cursor.fetchone()
+        cursor.close()
+        conn.close()
+
+        if row is None:
+            return None  # email non trouvé
+        
+        id, username, email, password_hash, department_name = row
+
+    def get_all_users(self) -> list[Collaborator]:
+        """Retourne la liste des utilisateurs."""
+        return self._users
