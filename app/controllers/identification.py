@@ -46,3 +46,37 @@ def authenticate_user(email: str, password: str, users: list[Collaborator]) -> O
             else:
                 return None  # Mot de passe incorrect
     return None  # Email non trouvé
+
+
+
+# Dictionnaire des permissions par rôle
+ROLE_PERMISSIONS = {
+    "gestion": ["create_contract", "view_clients", "manage_events"],
+    "commercial": ["view_clients", "create_client", "update_contract"],
+    "support": ["view_events", "update_event_status"],
+}
+
+def get_permissions(user: Collaborator) -> list[str]:
+    """
+    Retourne la liste des permissions associées au rôle de l'utilisateur.
+
+    Args:
+        user (Collaborator): L'utilisateur connecté.
+
+    Returns:
+        list[str]: Permissions du rôle.
+    """
+    return ROLE_PERMISSIONS.get(user.role, [])
+    
+def has_permission(user: Collaborator, permission: str) -> bool:
+    """
+    Vérifie si l'utilisateur possède une permission spécifique.
+
+    Args:
+        user (Collaborator): L'utilisateur connecté.
+        permission (str): Permission à tester.
+
+    Returns:
+        bool: True si permission accordée, False sinon.
+    """
+    return permission in get_permissions(user)
