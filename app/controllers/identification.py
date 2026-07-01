@@ -1,4 +1,6 @@
 from app.models.classes import Collaborator, Department
+from typing import Optional
+
 
 def create_user(id: int, username: str, email: str, password: str, department_name: str) -> Collaborator:
     """
@@ -22,6 +24,7 @@ def create_user(id: int, username: str, email: str, password: str, department_na
     # Création du collaborateur avec hash dans __init__
     user = Collaborator(id=id, username=username, email=email, password=password, department=department)
     return user
+
 
 def authenticate_user(email: str, password: str, users: list[Collaborator]) -> Optional[Collaborator]:
     """
