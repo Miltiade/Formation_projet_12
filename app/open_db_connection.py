@@ -1,9 +1,8 @@
-import mysql.connector
-from config import DB_CONFIG
+import pymysql
+from app.config import DB_CONFIG
 
 def get_db_connection():
-    """Ouvre une connexion vers la base MySQL."""
-    connection = mysql.connector.connect(
+    connection = pymysql.connect(
         host=DB_CONFIG['host'],
         user=DB_CONFIG['user'],
         password=DB_CONFIG['password'],
