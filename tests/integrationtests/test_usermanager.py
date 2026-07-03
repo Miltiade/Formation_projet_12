@@ -9,7 +9,7 @@ def main():
         username="alice",
         email="alice@example.com",
         password="TestPass123!",
-        department_name="gestion"
+        department_name="Gestion"
     )
     print("Utilisateur créé :", user_created.username, user_created.email)
 
