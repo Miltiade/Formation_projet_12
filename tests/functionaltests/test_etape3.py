@@ -1,4 +1,3 @@
-from argon2 import PasswordHasher
 from app.models.classes import Collaborator, Department
 from app.controllers.authentication import UserManager
 from app.controllers.authorizations import get_permissions, has_permission
