@@ -1,5 +1,5 @@
 from app.models.classes import Collaborator, Department
-from app.open_db_connection import get_db_connection
+from utils.open_db_connection import get_db_connection
 
 class UserManager:
 
