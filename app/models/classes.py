@@ -50,7 +50,7 @@ class Collaborator:
         self.id = id
         self.username = username
         self.email = email
-        self.__password_hash = ph.hash(password)  # data stored is password's hash, not password itself
+        self.__password_hash = ph.hash(password)  # key derivation + salage
         self.department = department
 
     @property
