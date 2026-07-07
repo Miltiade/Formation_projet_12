@@ -1,5 +1,9 @@
 from app.models.classes import Collaborator, Department
 from utils.open_db_connection import get_db_connection
+import os
+import time
+import jwt
+from utils.config import SECRET_KEY
 
 class UserManager:
 
@@ -62,3 +66,65 @@ class UserManager:
             user._Collaborator__password_hash = password_hash
             users.append(user)
         return users
+
+TOKEN_FILE = os.path.expanduser("~/.epicevents_token")
+ALGORITHM = "HS256"
+TOKEN_EXPIRATION_SECONDS = 3600  # 1 heure
+
+class AuthService:
+    """Service minimal pour auth avec JWT."""
+
+    @staticmethod
+    def create_token(user: Collaborator) -> str:
+        """Crée un JWT avec id, role et expiration."""
+        payload = {
+            "user_id": user.id,
+            "role": user.role,
+            "exp": time.time() + TOKEN_EXPIRATION_SECONDS,
+        }
+        token = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+        return token
+
+    @staticmethod
+    def save_token(token: str):
+        """Sauvegarde le token dans un fichier local sécurisé."""
+        with open(TOKEN_FILE, "w") as f:
+            f.write(token)
+        os.chmod(TOKEN_FILE, 0o600)  # Lire/écrire seul user
+
+    @staticmethod
+    def load_token() -> str | None:
+        """Charge le token depuis le fichier."""
+        if not os.path.exists(TOKEN_FILE):
+            return None
+        with open(TOKEN_FILE, "r") as f:
+            return f.read().strip()
+
+    @staticmethod
+    def decode_token(token: str) -> dict | None:
+        """Décode et valide un token. Renvoie payload ou None si erreur."""
+        try:
+            payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+            return payload
+        except jwt.ExpiredSignatureError:
+            print("Votre session a expiré, veuillez vous reconnecter.")
+            return None
+        except jwt.InvalidTokenError:
+            print("Token invalide, veuillez vous reconnecter.")
+            return None
+
+    @staticmethod
+    def get_current_user_info() -> dict | None:
+        """Récupère les infos user depuis token, None si erreur."""
+        token = AuthService.load_token()
+        if not token:
+            print("Aucun token trouvé, veuillez vous connecter.")
+            return None
+        return AuthService.decode_token(token)
+
+    @staticmethod
+    def logout():
+        """Supprime le token localement."""
+        if os.path.exists(TOKEN_FILE):
+            os.remove(TOKEN_FILE)
+            print("Déconnexion réussie.")
