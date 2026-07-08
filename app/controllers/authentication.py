@@ -8,6 +8,7 @@ from utils.config import SECRET_KEY
 class UserManager:
 
     def create_user(self, id: int, username: str, email: str, password: str, department_name: str) -> Collaborator:
+        department_name = department_name.capitalize()
         department = Department(department_name)
         user = Collaborator(id=id, username=username, email=email, password=password, department=department)
         
