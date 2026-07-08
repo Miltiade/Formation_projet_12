@@ -1,7 +1,11 @@
+import os
+
 DB_CONFIG = {
-    'host': 'localhost',
-    'user': 'root',        # 'root' pour dev
-    'password': 'RBiFZKCHSJdFttXxEzLS3N8Z',  # mot de passe associé
-    'database': 'crm',
-    'port': 3306,          # port MySQL par défaut
+    'host': os.getenv('DB_HOST', 'localhost'),
+    'user': os.getenv('DB_USER', 'root'),
+    'password': os.getenv('DB_PASSWORD', ''),  # no default — force env var
+    'database': os.getenv('DB_NAME', 'crm'),
+    'port': int(os.getenv('DB_PORT', 3306)),
 }
+
+SECRET_KEY = os.getenv('SECRET_KEY', 'dev-only-not-for-prod')
