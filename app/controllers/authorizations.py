@@ -1,27 +1,26 @@
-"""Besoins généraux
-
-● Chaque collaborateur doit avoir ses identifiants pour utiliser la
-plateforme.
-● Chaque collaborateur est associé à un rôle (suivant son
-département).
-● La plateforme doit permettre de stocker et de mettre à jour les
-informations sur les clients, les contrats et les événements.
-● Tous les collaborateurs doivent pouvoir accéder à tous les clients,
-contrats et événements en lecture seule.
-"""
-
 from app.models.classes import Collaborator
 
-# Permissions attribuées à chaque rôle
+# Permissions communes à tous
+
+COMMON_READ_PERMISSIONS = [
+    "view_all_clients",
+    "view_all_contracts",
+    "view_all_events",
+    "view_client",
+    "view_contract",
+    "view_event",
+]
+
+# Permissions spécifiques à chaque rôle
+
 ROLE_PERMISSIONS = {
 
     #  GESTION :
        # Créer, mettre à jour et supprimer des collaborateurs; 
-       # Filtrer l’affichage des événements, par exemple : afficher tous les événements qui n’ont pas de « support » associé
+       # Filtrer l’affichage des événements, par exemple : afficher tous les événements qui n’ont pas de "support" associé
        # Modifier des événements (pour associer un collaborateur support à l’événement)
     "gestion":         
         [
-         "view_all_clients",
          "create_collaborator",
          "update_collaborator",
          "delete_collaborator",        
@@ -37,7 +36,6 @@ ROLE_PERMISSIONS = {
         # Créer un événement pour un de leurs clients qui a signé un contrat
     "commercial":
         [
-         "view_all_clients", 
          "create_client",
          "update_assigned_client", 
          "update_assigned_contract", 
@@ -51,15 +49,14 @@ ROLE_PERMISSIONS = {
         # Mettre à jour les événements dont ils sont responsables    
     "support":
         [
-         "view_all_events", 
-         "view_only_assigned_events",         
+         "filter_events_view",         
          "update_assigned_event"
          ],
 }
 
 def get_permissions(user: Collaborator) -> list[str]:
     """Retourne la liste des permissions du rôle utilisateur."""
-    return ROLE_PERMISSIONS.get(user.role, [])
+    return ROLE_PERMISSIONS.get(user.role, []) + COMMON_READ_PERMISSIONS
 
 def has_permission(user: Collaborator, permission: str) -> bool:
     """Vérifie si l'utilisateur possède une permission précise."""
