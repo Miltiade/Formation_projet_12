@@ -1,43 +1,83 @@
 import unittest
-from unittest.mock import MagicMock, patch
-import sys, os
+from unittest.mock import patch, MagicMock
+from app.controllers.authentication import UserManager, AuthService
+from app.models.classes import Collaborator, Department
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
-from app.controllers.authentication import UserManager
+
+def make_collaborator(id=1, username="bob", email="bob@x.com",
+                      password="secret", department_name="Commercial"):
+    dept = Department(department_name)
+    return Collaborator(id=id, username=username, email=email,
+                        password=password, department=dept)
 
 
 class TestUserManager(unittest.TestCase):
 
     def setUp(self):
-        # Fake DB connection — no real Postgres needed
         self.fake_conn = MagicMock()
         self.fake_cursor = MagicMock()
         self.fake_conn.cursor.return_value = self.fake_cursor
-        self.manager = UserManager(self.fake_conn)
+        self.manager = UserManager()
 
-    def test_authenticate_returns_user_when_credentials_match(self):
-        # Arrange: fake DB says "yes, bob exists with this hash"
-        self.fake_cursor.fetchone.return_value = ("bob", "hashed_pw")
-        with patch("controllers.authentication.check_password", return_value=True):
-            # Act
-            result = self.manager.authenticate("bob", "secret")
-        # Assert
+    def test_authenticate_returns_none_when_email_not_found(self):
+        self.fake_cursor.fetchone.return_value = None
+        with patch("app.controllers.authentication.get_db_connection",
+                   return_value=self.fake_conn):
+            result = self.manager.authenticate("nobody@x.com", "secret")
+        self.assertIsNone(result)
+
+    def test_authenticate_returns_user_when_password_matches(self):
+        real_user = make_collaborator(password="secret")
+        real_hash = real_user._Collaborator__password_hash
+        self.fake_cursor.fetchone.return_value = (
+            real_user.id, real_user.username, real_user.email,
+            real_hash, real_user.department.name
+        )
+        with patch("app.controllers.authentication.get_db_connection",
+                   return_value=self.fake_conn):
+            result = self.manager.authenticate("bob@x.com", "secret")
         self.assertIsNotNone(result)
+        self.assertEqual(result.email, "bob@x.com")
 
     def test_authenticate_returns_none_when_password_wrong(self):
-        self.fake_cursor.fetchone.return_value = ("bob", "hashed_pw")
-        with patch("controllers.authentication.check_password", return_value=False):
-            result = self.manager.authenticate("bob", "wrong")
+        real_user = make_collaborator(password="secret")
+        real_hash = real_user._Collaborator__password_hash
+        self.fake_cursor.fetchone.return_value = (
+            real_user.id, real_user.username, real_user.email,
+            real_hash, real_user.department.name
+        )
+        with patch("app.controllers.authentication.get_db_connection",
+                   return_value=self.fake_conn):
+            result = self.manager.authenticate("bob@x.com", "WRONG")
         self.assertIsNone(result)
 
     def test_create_user_executes_insert_with_hashed_password(self):
-        with patch("controllers.authentication.hash_password", return_value="hashed_pw"):
-            self.manager.create_user(id=42, name="alice", email="a@x", password="plain")
-        # Verify the SQL was called with the HASH, not the plain password
+        with patch("app.controllers.authentication.get_db_connection",
+                   return_value=self.fake_conn):
+            self.manager.create_user(
+                id=42, username="alice", email="a@x.com",
+                password="plain", department_name="Commercial"
+            )
         self.fake_cursor.execute.assert_called_once()
-        args = self.fake_cursor.execute.call_args[0]
-        self.assertIn("hashed_pw", args[1])
-        self.assertNotIn("plain", args[1])
+        sql, params = self.fake_cursor.execute.call_args[0]
+        # The 4th param is the password hash — must NOT be the plain password
+        self.assertNotEqual(params[3], "plain")
+        self.assertTrue(len(params[3]) > 20)
+
+
+class TestAuthService(unittest.TestCase):
+
+    def test_create_token_returns_a_jwt_string(self):
+        user = make_collaborator()
+        token = AuthService.create_token(user)
+        self.assertEqual(len(token.split(".")), 3)
+
+    def test_decode_token_roundtrip_returns_payload(self):
+        user = make_collaborator(id=7, department_name="Gestion")
+        token = AuthService.create_token(user)
+        payload = AuthService.decode_token(token)
+        self.assertEqual(payload["user_id"], 7)
+        self.assertEqual(payload["role"], "gestion")
 
 
 if __name__ == "__main__":
