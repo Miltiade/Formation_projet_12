@@ -5,8 +5,8 @@ from app.controllers.authorizations import has_permission
 
 
 class DataReader:
-    """Classe pour lire les données clients, contrats, événements depuis la BDD,
-    en vérifiant les permissions de l'utilisateur donné."""
+    """Classe pour lire les données clients, contrats, événements depuis la BDD.
+    NB : authentification et permissions de l'utilisateur sont toujours vérifiées avant la lecture des données."""
 
     def __init__(self, user: Optional[Collaborator]):
         """
@@ -14,14 +14,13 @@ class DataReader:
             user (Collaborator | None): Utilisateur authentifié, ou None si non authentifié.
         """
         self.user = user
+        print(user)
 
     def get_all_clients(self) -> list[dict]:
         """
         Récupère tous les clients si l'utilisateur a la permission.
-
         Returns:
-            list[dict]: Liste de clients sous forme de dictionnaires.
-        
+            list[dict]: Liste de clients sous forme de dictionnaires.    
         Raises:
             PermissionError: Si l'utilisateur n'a pas la permission ou n'est pas authentifié.
         """
@@ -39,14 +38,16 @@ class DataReader:
 
         # Convertir les tuples en dict simples
         clients = [{"id": r[0], "name": r[1], "email": r[2]} for r in rows]
+        print(clients)
         return clients
-
+        
     def get_all_contracts(self) -> list[dict]:
         """
         Récupère tous les contrats si l'utilisateur a la permission.
-
         Returns:
             list[dict]: Liste des contrats.
+        Raises:
+            PermissionError: Si l'utilisateur n'a pas la permission ou n'est pas authentifié.
         """
         if self.user is None:
             raise PermissionError("Utilisateur non authentifié.")
@@ -61,14 +62,16 @@ class DataReader:
         conn.close()
 
         contracts = [{"id": r[0], "client_id": r[1], "amount": r[2], "status": r[3]} for r in rows]
+        print(contracts)
         return contracts
 
     def get_all_events(self) -> list[dict]:
         """
         Récupère tous les événements si l'utilisateur a la permission.
-
         Returns:
             list[dict]: Liste des événements.
+        Raises:
+            PermissionError: Si l'utilisateur n'a pas la permission ou n'est pas authentifié.
         """
         if self.user is None:
             raise PermissionError("Utilisateur non authentifié.")
@@ -83,4 +86,5 @@ class DataReader:
         conn.close()
 
         events = [{"id": r[0], "contract_id": r[1], "date_event": r[2], "location": r[3]} for r in rows]
+        print(events)
         return events
