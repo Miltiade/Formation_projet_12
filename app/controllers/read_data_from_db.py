@@ -6,7 +6,7 @@ from app.controllers.authorizations import has_permission
 
 class DataReader:
     """Classe pour lire les données clients, contrats, événements depuis la BDD.
-    NB : authentification et permissions de l'utilisateur sont toujours vérifiées avant la lecture des données."""
+    NB : authentification et permissions de l'utilisateur sont toujours vérifiées AVANT la lecture des données."""
 
     def __init__(self, user: Optional[Collaborator]):
         """
@@ -15,6 +15,22 @@ class DataReader:
         """
         self.user = user
         print(user)
+
+    def _fetch_all(self, query: str) -> list[tuple]:
+        """Exécute une requête SELECT et retourne toutes les lignes."""
+        try:
+            conn = get_db_connection()
+        except MySQLError as e:
+            print(f"ERREUR: connexion BDD impossible : {e}")
+            raise
+        
+        try:
+            with conn.cursor() as cur:
+                cur.execute(query)
+                rows = cur.fetchall()
+            return rows
+        finally:
+            conn.close()
 
     def get_all_clients(self) -> list[dict]:
         """
@@ -29,17 +45,11 @@ class DataReader:
         if not has_permission(self.user, "view_all_clients"):
             raise PermissionError("Permission insuffisante pour voir tous les clients.")
         
-        conn = get_db_connection()
-        cur = conn.cursor()
-        cur.execute("SELECT id, name, email FROM clients")
-        rows = cur.fetchall()
-        cur.close()
-        conn.close()
-
-        # Convertir les tuples en dict simples
+        rows = self._fetch_all("SELECT id, name, email FROM clients")
         clients = [{"id": r[0], "name": r[1], "email": r[2]} for r in rows]
         print(clients)
         return clients
+
         
     def get_all_contracts(self) -> list[dict]:
         """
@@ -54,13 +64,7 @@ class DataReader:
         if not has_permission(self.user, "view_all_contracts"):
             raise PermissionError("Permission insuffisante pour voir tous les contrats.")
 
-        conn = get_db_connection()
-        cur = conn.cursor()
-        cur.execute("SELECT id, client_id, amount, status FROM contracts")
-        rows = cur.fetchall()
-        cur.close()
-        conn.close()
-
+        rows = self._fetch_all("SELECT id, client_id, amount, status FROM contracts")
         contracts = [{"id": r[0], "client_id": r[1], "amount": r[2], "status": r[3]} for r in rows]
         print(contracts)
         return contracts
@@ -78,13 +82,7 @@ class DataReader:
         if not has_permission(self.user, "view_all_events"):
             raise PermissionError("Permission insuffisante pour voir tous les événements.")
 
-        conn = get_db_connection()
-        cur = conn.cursor()
-        cur.execute("SELECT id, contract_id, date_event, location FROM events")
-        rows = cur.fetchall()
-        cur.close()
-        conn.close()
-
+        rows = self._fetch_all("SELECT id, contract_id, date_event, location FROM events")
         events = [{"id": r[0], "contract_id": r[1], "date_event": r[2], "location": r[3]} for r in rows]
         print(events)
         return events
