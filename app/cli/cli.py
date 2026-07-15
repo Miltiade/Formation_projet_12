@@ -126,3 +126,6 @@ def show_main_menu(ctx):
             cli_create_collaborator(writer)
         else:
             click.echo(f"L'option '{label_chosen}' n'est pas encore implémentée.")
+
+if __name__ == "__main__":
+    cli()
