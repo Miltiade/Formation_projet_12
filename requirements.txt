@@ -1,4 +1,11 @@
+argon2-cffi==25.1.0
+argon2-cffi-bindings==25.1.0
+cffi==2.0.0
+click==8.4.2
 greenlet==3.5.1
 mysql-connector-python==9.7.0
+pycparser==3.0
+PyJWT==2.13.0
+PyMySQL==1.2.0
 SQLAlchemy==2.0.50
 typing_extensions==4.15.0
