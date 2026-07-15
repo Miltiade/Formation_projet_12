@@ -1,6 +1,6 @@
 from datetime import date
 from typing import Optional
-from app.models.classes import Collaborator, Department, Client
+from app.models.classes import Collaborator, Department, Client, Contract, Event
 from utils.open_db_connection import get_db_connection
 from app.controllers.authorizations import has_permission
 import pymysql
