@@ -1,3 +1,5 @@
+
+
 import click
 from app.controllers.authentication import UserManager, AuthService
 from app.controllers.authorizations import get_permissions
