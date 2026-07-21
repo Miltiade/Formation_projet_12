@@ -8,9 +8,10 @@ et dispatche les actions associées.
 import click
 from app.controllers.authorizations import get_permissions
 from app.cli.handlers import (
-    create_collaborator, create_client, create_contract, create_event,
-    update_collaborator, update_assigned_client, update_assigned_contract,
-    delete_collaborator, update_assigned_event, assign_event_support,
+    create_collaborator, update_collaborator, delete_collaborator,
+    create_client, update_assigned_client,
+    create_contract, update_assigned_contract,
+    create_event, update_assigned_event, assign_event_support,
     filter_events_view, filter_contracts_view,
 )
 
