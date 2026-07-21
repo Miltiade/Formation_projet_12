@@ -1,9 +1,9 @@
 """
 Entry: python -m app.cli start
-Welcome Loop: Displays login menu, authenticates user via JWT
-Main Menu: Shows role-based options (gestion/commercial/support)
-Action Dispatch: Routes to domain handlers in cli/handlers/
-Actions: Users actions"""
+How it works:
+-- User must authenticate to access app
+-- Main menu calls user actions (using "handlers" and "utils" for clarity)
+"""
 
 import click
 from app.cli.welcome import run_welcome_loop
