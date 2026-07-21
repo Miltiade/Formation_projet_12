@@ -2,6 +2,8 @@
 
 import click
 from app.controllers.write_data_to_db import DataWriter
+from app.controllers.read_data_from_db import DataReader
+from app.cli.cli_utils import select_record, optional_prompt
 
 
 def create_client(user):
@@ -37,14 +39,38 @@ def create_client(user):
 
     click.echo(f"Client créé avec succès : full_name {client.full_name}, email {client.email}, phone{client.phone}, company_name{client.company_name}, creation_date{client.creation_date}, commercial_contact{client.commercial_contact}")
 
-
 def update_assigned_client(user):
     """
     Modifie un client assigné à `user`.
     Charge les clients assignés et permet modification.
     Vérifie que `user` a la permission.
     """
-    # On affiche la liste de tous les clients de l'utilisateur ; on invite à désigner un client à modifier  
-    # On montre chaque champ, l'un après l'autre, à l'utilisateur ; pour chaque champ, il est invité à saisir une nouvelle valeur ou à laisser le champ vide
-    # On vérifie que l'utilisateur a la permission
+    selected_id = select_record(user, "client", DataReader(user).get_all_clients)
+    if selected_id is None:
+        return
 
+    try:
+        reader = DataReader(user)
+        client_list = reader.get_all_clients()
+        client_dict = next((c for c in client_list if c["id"] == selected_id), None)
+        if not client_dict:
+            click.echo("Client introuvable.")
+            return
+        
+        updates = optional_prompt(client_dict, {
+            "full_name": ("Nom complet", str),
+            "email": ("Email", str),
+            "phone": ("Téléphone", str),
+            "company_name": ("Nom entreprise", str),
+        })
+
+        if not updates:
+            click.echo("Aucun changement apporté.")
+            return
+
+        click.echo(f"Mise à jour prête : {updates}")
+        
+    except PermissionError as pe:
+        click.echo(f"Permission refusée : {pe}")
+    except Exception as e:
+        click.echo(f"Erreur lors de la mise à jour : {e}")
