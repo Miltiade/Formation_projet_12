@@ -226,7 +226,202 @@ class DataWriter:
                 conn.commit()
         finally:
             conn.close()
-    
+
+    def delete_collaborator(self, collaborator_id: int) -> None:
+        """
+        Supprime un collaborateur existant.
+        
+        Args:
+            collaborator_id (int): ID du collaborateur à supprimer.
+        
+        Raises:
+            PermissionError, LookupError, pymysql.MySQLError.
+        """
+        if self.user is None or not has_permission(self.user, "delete_collaborator"):
+            raise PermissionError("Permission refusée pour supprimer un collaborateur.")
+
+        conn = get_db_connection()
+        try:
+            with conn.cursor() as cur:
+                # Check existence
+                cur.execute("SELECT id FROM collaborators WHERE id = %s", (collaborator_id,))
+                if cur.fetchone() is None:
+                    raise LookupError(f"Collaborateur ID {collaborator_id} introuvable.")
+                
+                # Delete
+                cur.execute("DELETE FROM collaborators WHERE id = %s", (collaborator_id,))
+                conn.commit()
+        finally:
+            conn.close()
+
+    def create_client(
+        self,
+        full_name: str,
+        email: str,
+        phone: str,
+        company_name: str,
+        creation_date: str,
+        commercial_contact_id: int
+    ) -> Client:
+        """
+        Crée un nouveau client en base après vérification des données et permissions.
+
+        Args:
+            full_name (str): Nom complet du client.
+            email (str): Email valide.
+            phone (str): Numéro de téléphone.
+            company_name (str): Nom de l'entreprise.
+            creation_date (str): Date ISO (YYYY-MM-DD).
+            commercial_contact_id (int): ID du collaborateur commercial.
+
+        Raises:
+            PermissionError, ValueError, LookupError, pymysql.MySQLError.
+
+        Returns:
+            Client: Instance créée.
+        """
+        # Vérifier permission
+        if self.user is None:
+            raise PermissionError("Utilisateur non authentifié.")
+        
+        if self.user.role == "commercial":
+            if not has_permission(self.user, "create_client"):
+                raise PermissionError("Permission insuffisante pour créer un client.")
+        elif self.user.role == "gestion":
+            if not has_permission(self.user, "create_collaborator"):  # Gestion can create clients too
+                raise PermissionError("Permission insuffisante pour créer un client.")
+        else:
+            raise PermissionError("Permission insuffisante.")
+
+        # Validation simple
+        if not full_name.strip():
+            raise ValueError("Le nom complet ne peut pas être vide.")
+        if not email.strip() or "@" not in email:
+            raise ValueError("Email invalide.")
+        if not phone.strip():
+            raise ValueError("Le téléphone est requis.")
+        if not company_name.strip():
+            raise ValueError("Le nom de l'entreprise est requis.")
+        try:
+            date.fromisoformat(creation_date)
+        except ValueError:
+            raise ValueError("Date de création invalide, format attendu AAAA-MM-JJ.")
+
+        # Vérifier existence du commercial_contact
+        try:
+            commercial_obj = self.get_collaborator_by_id(commercial_contact_id)
+        except LookupError:
+            raise LookupError(f"Collaborateur ID {commercial_contact_id} non trouvé.")
+
+        # Insertion en base
+        sql = """
+            INSERT INTO clients (full_name, email, phone, company_name, creation_date, commercial_contact)
+            VALUES (%s, %s, %s, %s, %s, %s)
+        """
+        try:
+            conn = get_db_connection()
+            with conn.cursor() as cur:
+                cur.execute(sql, (full_name, email, phone, company_name, creation_date, commercial_contact_id))
+                conn.commit()
+                client_id = cur.lastrowid
+        finally:
+            conn.close()
+
+        # Retourner l'objet Client. ATTENTION : ici, last_update_date = creation_date.
+        return Client(
+            id=client_id,
+            full_name=full_name,
+            email=email,
+            phone=phone,
+            company_name=company_name,
+            creation_date=creation_date,
+            last_update_date=creation_date,
+            commercial_contact=commercial_obj,
+        )
+
+    def update_client(
+        self,
+        client_id: int,
+        full_name: Optional[str] = None,
+        email: Optional[str] = None,
+        phone: Optional[str] = None,
+        company_name: Optional[str] = None,
+    ) -> None:
+        """
+        Met à jour un client existant.
+        Vérifie permissions, valide données.
+
+        Args:
+            client_id (int): ID du client à modifier.
+            full_name (str|None): Nouveau nom complet.
+            email (str|None): Nouvel email.
+            phone (str|None): Nouveau téléphone.
+            company_name (str|None): Nouveau nom entreprise.
+
+        Raises:
+            PermissionError, ValueError, LookupError, pymysql.MySQLError.
+        """
+        # Vérifier utilisateur et permission
+        if self.user is None:
+            raise PermissionError("Utilisateur non authentifié.")
+
+        if self.user.role == "commercial":
+            if not has_permission(self.user, "update_assigned_client"):
+                raise PermissionError("Permission insuffisante pour modifier ce client.")
+        elif self.user.role == "gestion":
+            if not has_permission(self.user, "update_collaborator"):  # Gestion can update all
+                raise PermissionError("Permission insuffisante pour modifier ce client.")
+        else:
+            raise PermissionError("Permission insuffisante.")
+
+        # Vérifier que le client existe
+        conn = get_db_connection()
+        try:
+            with conn.cursor() as cur:
+                cur.execute("SELECT id FROM clients WHERE id = %s", (client_id,))
+                existing = cur.fetchone()
+                if existing is None:
+                    raise LookupError(f"Client ID {client_id} non trouvé.")
+
+            updates = []
+            params = []
+
+            if full_name is not None:
+                if not full_name.strip():
+                    raise ValueError("Le nom complet ne peut pas être vide.")
+                updates.append("full_name = %s")
+                params.append(full_name)
+
+            if email is not None:
+                if not email.strip() or "@" not in email:
+                    raise ValueError("Email invalide.")
+                updates.append("email = %s")
+                params.append(email)
+
+            if phone is not None:
+                if not phone.strip():
+                    raise ValueError("Le téléphone ne peut pas être vide.")
+                updates.append("phone = %s")
+                params.append(phone)
+
+            if company_name is not None:
+                if not company_name.strip():
+                    raise ValueError("Le nom de l'entreprise ne peut pas être vide.")
+                updates.append("company_name = %s")
+                params.append(company_name)
+
+            if not updates:
+                raise ValueError("Aucun champ à mettre à jour fourni.")
+
+            params.append(client_id)
+            sql = f"UPDATE clients SET {', '.join(updates)} WHERE id = %s"
+
+            with conn.cursor() as cur:
+                cur.execute(sql, tuple(params))
+                conn.commit()
+        finally:
+            conn.close()
+
     def create_contract(self, total_amount: float, remaining_amount: float, creation_date: str, is_signed: bool, client_id: int, commercial_contact_id: int) -> Contract:
         """
         Crée un nouveau contrat en base après vérification des données et permissions.
