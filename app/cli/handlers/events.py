@@ -2,6 +2,9 @@
 
 import click
 from app.controllers.write_data_to_db import DataWriter
+from app.controllers.read_data_from_db import DataReader
+from app.cli.cli_utils import select_record, optional_prompt
+
 
 def create_event(user):
     """
@@ -45,16 +48,96 @@ def update_assigned_event(user):
     Charge les événements assignés et propose édition.
     Vérifie que `user` a la permission.
     """
-    # On affiche la liste de tous les événements de l'utilisateur ; on invite à désigner un événement à modifier  
-    # On montre chaque champ, l'un après l'autre, à l'utilisateur ; pour chaque champ, il est invité à saisir une nouvelle valeur ou à laisser le champ vide
-    # On vérifie que l'utilisateur a la permission
+    dr = DataReader(user)
+    dw = DataWriter(user)
 
+    # Select event
+    selected_id = select_record(
+        "événement",
+        dr.get_all_events,
+        display_field="name"
+    )
+    if not selected_id:
+        return
+
+    try:
+        # Get current data
+        event_list = dr.get_all_events()
+        target = next((e for e in event_list if e["id"] == selected_id), None)
+        if not target:
+            click.echo("Événement introuvable.")
+            return
+
+        # Field-by-field update matching Event model
+        updates = {}
+
+        updates["name"] = optional_prompt("Nom", target.get("name", ""))
+        updates["client_name"] = optional_prompt("Nom client", target.get("client_name", ""))
+        updates["client_contact"] = optional_prompt("Coordonnées client", target.get("client_contact", ""))
+        updates["date_start"] = optional_prompt("Date début", target.get("date_start", ""))
+        updates["date_end"] = optional_prompt("Date fin", target.get("date_end", ""))
+        updates["location"] = optional_prompt("Lieu", target.get("location", ""))
+        updates["attendees"] = optional_prompt("Convives", target.get("attendees"), int)
+        updates["notes"] = optional_prompt("Remarques", target.get("notes", ""))
+
+        # Contract and support are special cases - use select_record if changing
+        change_contract = click.confirm("Changer le contrat associé ?", default=False)
+        if change_contract:
+            updates["contract_id"] = select_record("contrat", dr.get_all_contracts, display_field="id")
+
+        change_support = click.confirm("Changer le support assigné ?", default=False)
+        if change_support:
+            updates["support_contact_id"] = select_record("collaborateur", dr.get_all_collaborators, display_field="username")
+
+        # Filter out None values
+        changes = {k: v for k, v in updates.items() if v is not None}
+
+        if not changes:
+            click.echo("Aucun changement apporté.")
+            return
+
+        dw.update_event(selected_id, **changes)
+        click.echo("→ Événement mis à jour.")
+
+    except PermissionError as pe:
+        click.echo(f"Permission refusée : {pe}")
+    except ValueError as ve:
+        click.echo(f"Erreur de saisie : {ve}")
+    except Exception as e:
+        click.echo(f"Erreur lors de la mise à jour : {e}")
 
 def assign_event_support(user):
     """
     Assigne un collaborateur support à un événement spécifique.
     Vérifie que `user` a la permission.
     """
-    # On affiche la liste de tous les événements ; on invite à désigner un événement à modifier  
-    # On montre le champ support_contact à l'utilisateur ; il est invité à saisir une nouvelle valeur ou à laisser le champ vide
-    # On vérifie que l'utilisateur a la permission
+    dr = DataReader(user)
+    dw = DataWriter(user)
+
+    # Select event
+    selected_id = select_record(
+        "événement",
+        dr.get_all_events,
+        display_field="name"
+    )
+    if not selected_id:
+        return
+
+    # Select support collaborator
+    support_id = select_record(
+        "collaborateur",
+        dr.get_all_collaborators,
+        display_field="username"
+    )
+    if not support_id:
+        click.echo("Annulation.")
+        return
+
+    try:
+        # This requires update_event() with support_contact_id parameter OR dedicated method
+        dw.update_event(selected_id, support_contact_id=support_id)
+        click.echo("→ Support assigné avec succès.")
+    except PermissionError as pe:
+        click.echo(f"Permission refusée : {pe}")
+    except Exception as e:
+        click.echo(f"Erreur lors de l'assignment : {e}")
