@@ -1,7 +1,7 @@
 venv/
 __pycache__/
 *.pyc
-export
+export.py
 export_tests.py
 project_export.txt
 .env
