@@ -46,6 +46,7 @@ def create_collaborator(user):
         department_name = dept_str.capitalize()
 
         collaborator = dw.create_collaborator(username, email, password, department_name)
+    
     except PermissionError as pe:
         click.echo(f"Permission refusée : {pe}")
         return
@@ -61,9 +62,12 @@ def create_collaborator(user):
 def update_collaborator(user):
     """
     Modifie un collaborateur existant.
-    Propose une sélection, puis invites à modifier champs.
+    Propose une sélection, puis invite à modifier champs.
     Vérifie que `user` a la permission.
     """
+    # On affiche la liste de tous les collaborateurs ; on l'invite à désigner un collaborateur à modifier
+    # On montre chaque champ, l'un après l'autre, à l'utilisateur ; pour chaque champ, il est invité à saisir une nouvelle valeur ou à laisser le champ vide
+    # On vérifie que l'utilisateur a la permission
 
 def delete_collaborator(user):
     """
@@ -71,6 +75,9 @@ def delete_collaborator(user):
     Propose une sélection, puis demande confirmation.
     Vérifie que `user` a la permission.
     """
+    # On affiche la liste de tous les collaborateurs ; on l'invite à désigner un collaborateur à supprimer
+    # On demande confirmation
+    # On vérifie que l'utilisateur a la permission
 
 # === Gestion des clients ===
 
@@ -94,6 +101,7 @@ def create_client(user):
         commercial_contact = click.prompt("Contact commercial chez Epic Event", type=str) # type is collaborator ID
 
         client = dw.create_client(full_name, email, phone, company_name, creation_date, commercial_contact)
+
     except PermissionError as pe:
         click.echo(f"Permission refusée : {pe}")
         return
@@ -113,6 +121,10 @@ def update_assigned_client(user):
     Charge les clients assignés et permet modification.
     Vérifie que `user` a la permission.
     """
+    # On affiche la liste de tous les clients de l'utilisateur ; on invite à désigner un client à modifier  
+    # On montre chaque champ, l'un après l'autre, à l'utilisateur ; pour chaque champ, il est invité à saisir une nouvelle valeur ou à laisser le champ vide
+    # On vérifie que l'utilisateur a la permission
+
 
 # === Gestion des contrats ===
 
@@ -135,6 +147,7 @@ def create_contract(user):
         commercial_contact = click.prompt("Contact commercial chez Epic Event", type=str) # type is collaborator ID
         
         contract = dw.create_contract(total_amount, remaining_amount, creation_date, is_signed, client, commercial_contact)
+
     except PermissionError as pe:
         click.echo(f"Permission refusée : {pe}")
         return
@@ -154,6 +167,10 @@ def update_assigned_contract(user):
     Charge les contrats assignés et permet modification.
     Vérifie que `user` a la permission.
     """
+    # On affiche la liste de tous les contrats de l'utilisateur ; on invite à désigner un contrat à modifier  
+    # On montre chaque champ, l'un après l'autre, à l'utilisateur ; pour chaque champ, il est invité à saisir une nouvelle valeur ou à laisser le champ vide
+    # On vérifie que l'utilisateur a la permission
+
 
 # === Gestion des événements ===
 
@@ -179,6 +196,7 @@ def create_event(user):
         support_contact = click.prompt("Contact support chez Epic Event", type=str) # type is collaborator ID
         
         event = dw.create_event(id, client_name, client_contact, date_start, date_end, location, attendees, notes, contract, support_contact)
+
     except PermissionError as pe:
         click.echo(f"Permission refusée : {pe}")
         return
@@ -198,12 +216,29 @@ def update_assigned_event(user):
     Charge les événements assignés et propose édition.
     Vérifie que `user` a la permission.
     """
+    # On affiche la liste de tous les événements de l'utilisateur ; on invite à désigner un événement à modifier  
+    # On montre chaque champ, l'un après l'autre, à l'utilisateur ; pour chaque champ, il est invité à saisir une nouvelle valeur ou à laisser le champ vide
+    # On vérifie que l'utilisateur a la permission
+
 
 def assign_event_support(user):
     """
     Assigne un collaborateur support à un événement spécifique.
     Vérifie que `user` a la permission.
     """
+    # On affiche la liste de tous les événements ; on invite à désigner un événement à modifier  
+    # On montre le champ support_contact à l'utilisateur ; il est invité à saisir une nouvelle valeur ou à laisser le champ vide
+    # On vérifie que l'utilisateur a la permission
+    
+
+# === Vues communes ===
+
+# def view_all_clients
+# def "view_all_contracts"
+# def "view_all_events"
+# def "view_client"
+# def "view_contract"
+# def "view_event"
 
 # === Filtres et vues spécifiques ===
 
@@ -212,9 +247,18 @@ def filter_events_view(user):
     Affiche une liste filtrée d’événements selon des critères.
     Vérifie que `user` a la permission.
     """
+    # On affiche la liste des critères de filtrage : e.g. afficher uniquement les événements qui sont attribués à l'utilisateur
+    # On invite l'utilisateur à choisir un critère de filtrage
+    # On affiche la liste d'événements ainsi filtrée
+    # On vérifie que l'utilisateur a la permission
+
 
 def filter_contracts_view(user):
     """
     Affiche une liste filtrée des contrats selon des critères.
     Vérifie que `user` a la permission.
     """
+    # On affiche la liste des critères de filtrage : e.g. afficher tous les contrats pas encore signés, ou pas encore entièrement payés    # On invite l'utilisateur à choisir un critère de filtrage
+    # On invite l'utilisateur à choisir un critère de filtrage
+    # On affiche la liste de contrats ainsi filtrée
+    # On vérifie que l'utilisateur a la permission
