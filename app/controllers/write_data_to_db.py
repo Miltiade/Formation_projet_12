@@ -601,141 +601,191 @@ class DataWriter:
         finally:
             conn.close()
 
-    def create_event(self, title: str, description: str, start_date: str, end_date: str,
-                    contract_id: int) -> Event:
+    def create_event(
+        self,
+        name: str,
+        client_name: str,
+        client_contact: str,
+        date_start: str,
+        date_end: str,
+        location: str,
+        attendees: int,
+        notes: str,
+        contract_id: int,
+        support_contact_id: Optional[int] = None
+    ) -> Event:
         """
-        Crée un nouvel événement lié à un contrat, après validation et contrôle des permissions.
-
+        Crée un nouvel événement complet dans la BDD.
+        Correspond à la signature du modèle Event dans classes.py.
+        
         Args:
-            title (str): Titre non vide.
-            description (str): Description non vide.
-            start_date (str): Date de début ISO (AAAA-MM-JJ).
-            end_date (str): Date de fin ISO (AAAA-MM-JJ), >= start_date.
-            contract_id (int): ID du contrat existant.
-
-        Raises:
-            PermissionError, ValueError, LookupError, pymysql.MySQLError.
-
+            name (str): Nom/titre de l'événement.
+            client_name (str): Nom du client.
+            client_contact (str): Coordonnées client (email+téléphone).
+            date_start (str): Date début ISO (AAA-MM-JJ).
+            date_end (str): Date fin ISO (AAA-MM-JJ).
+            location (str): Lieu de l'événement.
+            attendees (int): Nombre de convives.
+            notes (str): Remarques.
+            contract_id (int): ID du contrat associé.
+            support_contact_id (int|None): ID collaborateur support (optionnel).
+        
         Returns:
-            Event: L’instance créée.
+            Event: Instance créée.
         """
-
         if self.user is None or not has_permission(self.user, "create_event"):
             raise PermissionError("Permission refusée pour créer un événement.")
 
-        # Validation simple
-        if not title.strip():
-            raise ValueError("Le titre ne peut pas être vide.")
-        if not description.strip():
-            raise ValueError("La description ne peut pas être vide.")
+        # Validation
+        if not name.strip():
+            raise ValueError("Le nom ne peut pas être vide.")
+        if not client_name.strip():
+            raise ValueError("Le nom du client est requis.")
+        if not client_contact.strip():
+            raise ValueError("Les coordonnées client sont requises.")
         try:
-            start = date.fromisoformat(start_date)
-            end = date.fromisoformat(end_date)
+            start = date.fromisoformat(date_start)
+            end = date.fromisoformat(date_end)
             if end < start:
-                raise ValueError("La date de fin doit être postérieure ou égale à la date de début.")
-        except ValueError:
-            raise ValueError("Dates invalides, format attendu AAAA-MM-JJ.")
+                raise ValueError("La date de fin doit être ≥ date de début.")
+        except ValueError as e:
+            raise ValueError(f"Dates invalides: {e}")
+        if not isinstance(attendees, int) or attendees < 0:
+            raise ValueError("Le nombre de convives doit être un entier positif.")
 
         # Vérifier existence du contrat
         try:
-            contract = self.get_contract_by_id(contract_id)  # À implémenter si ce n’est pas fait
+            contract_obj = self.get_contract_by_id(contract_id)
         except LookupError:
             raise LookupError(f"Contrat ID {contract_id} non trouvé.")
 
+        # Vérifier existence du support_contact si fourni
+        support_contact_obj = None
+        if support_contact_id is not None:
+            try:
+                support_contact_obj = self.get_collaborator_by_id(support_contact_id)
+            except LookupError:
+                raise LookupError(f"Collaborateur ID {support_contact_id} non trouvé.")
+
+        # Insertion en base
         sql = """
-        INSERT INTO events (title, description, start_date, end_date, contract_id)
-        VALUES (%s, %s, %s, %s, %s)
+            INSERT INTO events (
+                name, client_name, client_contact, date_start, date_end,
+                location, attendees, notes, contract_id, support_contact
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
         try:
             conn = get_db_connection()
             with conn.cursor() as cur:
-                cur.execute(sql, (title, description, start_date, end_date, contract_id))
+                cur.execute(sql, (
+                    name, client_name, client_contact, date_start, date_end,
+                    location, attendees, notes, contract_id, support_contact_id
+                ))
                 conn.commit()
                 event_id = cur.lastrowid
         finally:
             conn.close()
 
-        return Event(event_id, title, description, start_date, end_date, contract)
+        # Retourner l'objet Event complet
+        return Event(
+            name=name,
+            id=event_id,
+            client_name=client_name,
+            client_contact=client_contact,
+            date_start=date_start,
+            date_end=date_end,
+            location=location,
+            attendees=attendees,
+            notes=notes,
+            contract=contract_obj,
+            support_contact=support_contact_obj
+        )
 
-
-    def update_event(self, event_id: int,
-                    title: Optional[str] = None,
-                    description: Optional[str] = None,
-                    start_date: Optional[str] = None,
-                    end_date: Optional[str] = None,
-                    contract_id: Optional[int] = None) -> None:
+    def update_event(
+        self,
+        event_id: int,
+        name: Optional[str] = None,
+        client_name: Optional[str] = None,
+        client_contact: Optional[str] = None,
+        date_start: Optional[str] = None,
+        date_end: Optional[str] = None,
+        location: Optional[str] = None,
+        attendees: Optional[int] = None,
+        notes: Optional[str] = None,
+        contract_id: Optional[int] = None,
+        support_contact_id: Optional[int] = None
+    ) -> None:
         """
         Met à jour un événement existant.
-        Valide les données et permissions.
-
-        Args:
-            event_id (int): ID de l’événement à modifier.
-            title (str|None): Nouveau titre.
-            description (str|None): Nouvelle description.
-            start_date (str|None): Nouvelle date de début ISO.
-            end_date (str|None): Nouvelle date de fin ISO.
-            contract_id (int|None): Nouveau contrat lié.
-
-        Raises:
-            PermissionError, ValueError, LookupError, pymysql.MySQLError.
+        Correspond au modèle Event dans classes.py.
         """
-
         if self.user is None or not has_permission(self.user, "update_event"):
             raise PermissionError("Permission refusée pour modifier un événement.")
 
         conn = get_db_connection()
         try:
             with conn.cursor() as cur:
-                # Vérifier que l’événement existe
-                cur.execute("SELECT start_date, end_date FROM events WHERE id = %s", (event_id,))
+                # Vérifier que l'événement existe
+                cur.execute("SELECT * FROM events WHERE id = %s", (event_id,))
                 existing = cur.fetchone()
                 if existing is None:
                     raise LookupError(f"Événement ID {event_id} non trouvé.")
-                existing_start, existing_end = existing
-
+                
+                # Récupérer valeurs actuelles pour validation
+                # (colonne index dépend de votre schéma DB)
+            
             updates = []
             params = []
 
-            if title is not None:
-                if not title.strip():
-                    raise ValueError("Le titre ne peut pas être vide.")
-                updates.append("title = %s")
-                params.append(title)
+            if name is not None:
+                if not name.strip():
+                    raise ValueError("Le nom ne peut pas être vide.")
+                updates.append("name = %s")
+                params.append(name)
 
-            if description is not None:
-                if not description.strip():
-                    raise ValueError("La description ne peut pas être vide.")
-                updates.append("description = %s")
-                params.append(description)
+            if client_name is not None:
+                if not client_name.strip():
+                    raise ValueError("Le nom du client est requis.")
+                updates.append("client_name = %s")
+                params.append(client_name)
 
-            if start_date is not None:
+            if client_contact is not None:
+                if not client_contact.strip():
+                    raise ValueError("Les coordonnées client sont requises.")
+                updates.append("client_contact = %s")
+                params.append(client_contact)
+
+            if date_start is not None:
                 try:
-                    start = date.fromisoformat(start_date)
+                    date.fromisoformat(date_start)
                 except ValueError:
-                    raise ValueError("Date de début invalide, format attendu AAAA-MM-JJ.")
-            else:
-                start = existing_start
+                    raise ValueError("Date de début invalide.")
+                updates.append("date_start = %s")
+                params.append(date_start)
 
-            if end_date is not None:
+            if date_end is not None:
                 try:
-                    end = date.fromisoformat(end_date)
+                    date.fromisoformat(date_end)
                 except ValueError:
-                    raise ValueError("Date de fin invalide, format attendu AAAA-MM-JJ.")
-            else:
-                end = existing_end
+                    raise ValueError("Date de fin invalide.")
+                updates.append("date_end = %s")
+                params.append(date_end)
 
-            if start_date is not None or end_date is not None:
-                if end < start:
-                    raise ValueError("La date de fin doit être postérieure ou égale à la date de début.")
-                if start_date is not None:
-                    updates.append("start_date = %s")
-                    params.append(start_date)
-                if end_date is not None:
-                    updates.append("end_date = %s")
-                    params.append(end_date)
+            if location is not None:
+                updates.append("location = %s")
+                params.append(location)
+
+            if attendees is not None:
+                if not isinstance(attendees, int) or attendees < 0:
+                    raise ValueError("Nombre de convives invalide.")
+                updates.append("attendees = %s")
+                params.append(attendees)
+
+            if notes is not None:
+                updates.append("notes = %s")
+                params.append(notes)
 
             if contract_id is not None:
-                # Vérifier que le contrat existe
                 try:
                     _ = self.get_contract_by_id(contract_id)
                 except LookupError:
@@ -743,8 +793,16 @@ class DataWriter:
                 updates.append("contract_id = %s")
                 params.append(contract_id)
 
+            if support_contact_id is not None:
+                try:
+                    _ = self.get_collaborator_by_id(support_contact_id)
+                except LookupError:
+                    raise LookupError(f"Collaborateur ID {support_contact_id} non trouvé.")
+                updates.append("support_contact = %s")
+                params.append(support_contact_id)
+
             if not updates:
-                raise ValueError("Aucun champ à modifier fourni.")
+                raise ValueError("Aucun champ à mettre à jour fourni.")
 
             params.append(event_id)
             sql = f"UPDATE events SET {', '.join(updates)} WHERE id = %s"

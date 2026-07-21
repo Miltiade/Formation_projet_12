@@ -233,33 +233,21 @@ class DataReader:
     # ==================== EVENTS ====================
     
     def get_all_events(self) -> list[dict]:
-        """
-        Récupère tous les événements si l'utilisateur a la permission.
-        Returns:
-            list[dict]: Liste des événements.
-        Raises:
-            PermissionError: Si l'utilisateur n'a pas la permission ou n'est pas authentifié.
-        """
+        """Récupère tous les événements avec TOUS les champs."""
         if self.user is None:
             raise PermissionError("Utilisateur non authentifié.")
         if not has_permission(self.user, "view_all_events"):
             raise PermissionError("Permission insuffisante pour voir tous les événements.")
 
         rows = self._fetch_all(
-            "SELECT id, title, description, start_date, end_date, contract_id FROM events"
+            "SELECT id, name, client_name, client_contact, date_start, date_end, "
+            "location, attendees, notes, contract_id, support_contact FROM events"
         )
-        events = [
-            {
-                "id": r[0],
-                "title": r[1],
-                "description": r[2],
-                "start_date": r[3],
-                "end_date": r[4],
-                "contract_id": r[5]
-            }
-            for r in rows
-        ]
-        return events
+        return [{
+            "id": r[0], "name": r[1], "client_name": r[2], "client_contact": r[3],
+            "date_start": r[4], "date_end": r[5], "location": r[6],
+            "attendees": r[7], "notes": r[8], "contract_id": r[9], "support_contact": r[10]
+        } for r in rows]
 
     def get_event_by_id(self, event_id: int) -> dict:
         """
