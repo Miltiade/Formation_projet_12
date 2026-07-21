@@ -80,6 +80,32 @@ def create_client(user):
     Collecte les données nécessaires via prompts CLI.
     Vérifie que `user` a la permission.
     """
+    dw = DataWriter(user)
+
+    click.echo("Création d’un nouveau client.")
+
+    try:
+        full_name = click.prompt("Nom complet", type=str)
+        email = click.prompt("Email", type=str)
+        phone = click.prompt("Telephone", type=str)
+        company_name = click.prompt("Nom de l'entreprise", type=str)
+        creation_date = click.prompt("Date de création", type=str)        # ISO format, e.g. '2025-01-15'
+        # last_update_date = click.prompt
+        commercial_contact = click.prompt("Contact commercial chez Epic Event", type=str) # type is collaborator ID
+
+        client = dw.create_client(full_name, email, phone, company_name, creation_date, commercial_contact)
+    except PermissionError as pe:
+        click.echo(f"Permission refusée : {pe}")
+        return
+    except ValueError as ve:
+        click.echo(f"Erreur de saisie : {ve}")
+        return
+    except Exception as e:
+        click.echo(f"Erreur lors de la création : {e}")
+        return
+
+    click.echo(f"Client créé avec succès : full_name {client.full_name}, email {client.email}, phone{client.phone}, company_name{client.company_name}, creation_date{client.creation_date}, commercial_contact{client.commercial_contact}")
+
 
 def update_assigned_client(user):
     """
@@ -89,6 +115,38 @@ def update_assigned_client(user):
     """
 
 # === Gestion des contrats ===
+
+def create_contract(user):
+    """
+    Crée un nouveau contrat dans la base.
+    Collecte les données nécessaires via prompts CLI.
+    Vérifie que `user` a la permission.
+    """
+    dw = DataWriter(user)
+
+    click.echo("Création d’un nouveau contrat.")
+
+    try:
+        total_amount = click.prompt("Montant total", type=float) 
+        remaining_amount = click.prompt("Reste à payer", type=float)
+        creation_date = click.prompt("Date de création", type=str) # ISO format, e.g. '2025-01-15'
+        is_signed = click.prompt("Is contract already signed?", type=bool)
+        client = click.prompt("Client", type=str) # type is client ID
+        commercial_contact = click.prompt("Contact commercial chez Epic Event", type=str) # type is collaborator ID
+        
+        contract = dw.create_contract(total_amount, remaining_amount, creation_date, is_signed, client, commercial_contact)
+    except PermissionError as pe:
+        click.echo(f"Permission refusée : {pe}")
+        return
+    except ValueError as ve:
+        click.echo(f"Erreur de saisie : {ve}")
+        return
+    except Exception as e:
+        click.echo(f"Erreur lors de la création : {e}")
+        return
+
+    click.echo(f"Contrat créé avec succès : ID {contract.id}, total amount{contract.total_amount}, remaining_amount{contract.remaining_amount}, creation_date{contract.creation_date}, is_signed{contract.is_signed}, client{contract.client}, commercial_contact{contract.commercial_contact}")
+
 
 def update_assigned_contract(user):
     """
@@ -101,10 +159,38 @@ def update_assigned_contract(user):
 
 def create_event(user):
     """
-    Crée un nouvel événement.
+    Crée un nouvel événement dans la base
     Invite à saisir les informations nécessaires.
     Vérifie que `user` a la permission.
     """
+    dw = DataWriter(user)
+
+    click.echo("Création d’un nouvel événement.")
+
+    try:
+        client_name = click.prompt("Nom complet du client", type=str)
+        client_contact = click.prompt("Coordonnées du client (email+téléphone)", type=str) 
+        date_start = click.prompt("Date de début", type=str) 
+        date_end = click.prompt("Date de fin", type=str)
+        location = click.prompt("Lieu", type=str) 
+        attendees = click.prompt("Nombre de convives", type=int) 
+        notes = click.prompt("Remarques", type=str)
+        contract = click.prompt("Contrat associé à cet événement", type=str) # type is contract ID
+        support_contact = click.prompt("Contact support chez Epic Event", type=str) # type is collaborator ID
+        
+        event = dw.create_event(id, client_name, client_contact, date_start, date_end, location, attendees, notes, contract, support_contact)
+    except PermissionError as pe:
+        click.echo(f"Permission refusée : {pe}")
+        return
+    except ValueError as ve:
+        click.echo(f"Erreur de saisie : {ve}")
+        return
+    except Exception as e:
+        click.echo(f"Erreur lors de la création : {e}")
+        return
+
+    click.echo(f"Evénement créé avec succès : ID {event.id}, client_name{event.client_name}, client_contact{event.client_contact}, date_start{event.date_start}, date_end{event.date_end}, location{event.location}, attendees{event.attendees}, notes{event.notes}, contract{event.contract}, support_contact{event.support_contact}")
+
 
 def update_assigned_event(user):
     """
