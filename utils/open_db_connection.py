@@ -4,7 +4,6 @@ from utils.config import DB_CONFIG
 def get_db_connection():
     print(f"DEBUG: Tentative de connexion à la BDD {DB_CONFIG['host']}:{DB_CONFIG['port']} ...")
     try:
-        print(DB_CONFIG)
         connection = pymysql.connect(
             host=DB_CONFIG['host'],
             user=DB_CONFIG['user'],
