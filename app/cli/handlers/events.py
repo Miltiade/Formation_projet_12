@@ -41,7 +41,6 @@ def create_event(user):
 
     click.echo(f"Evénement créé avec succès : ID {event.id}, client_name{event.client_name}, client_contact{event.client_contact}, date_start{event.date_start}, date_end{event.date_end}, location{event.location}, attendees{event.attendees}, notes{event.notes}, contract{event.contract}, support_contact{event.support_contact}")
 
-
 def update_assigned_event(user):
     """
     Modifie un événement assigné à `user`.

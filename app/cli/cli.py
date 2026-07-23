@@ -1,5 +1,5 @@
 """
-Entry: python -m app.cli start
+Entry: python -m app.cli.cli
 How it works:
 -- User must authenticate to access app
 -- Main menu calls user actions (using "handlers" and "utils" for clarity)
