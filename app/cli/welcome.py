@@ -7,6 +7,8 @@ puis redirige vers le menu principal après connexion.
 import click
 from app.controllers.authentication import UserManager, AuthService
 from app.cli.main_menu import show_main_menu
+from app.controllers.write_data_to_db import DataWriter
+from app.models.classes import Collaborator
 
 user_manager = UserManager()
 
@@ -17,12 +19,19 @@ def run_welcome_loop():
 
     while True:
         click.echo("\nOptions :")
+        click.echo("  0 - DEV: créer un nouveau collaborateur maintenant")
         click.echo("  1 - Connexion")
         click.echo("  2 - Quitter")
 
         choice = click.prompt("Choisissez une option", type=int)
 
-        if choice == 1:
+        if choice == 0:
+            writer = DataWriter(None)  # permissions actuellement commentées
+            writer.create_collaborator("hubert", "hubert@coco.co", "poiuy", "Gestion")
+            print("Collaborateur créé")
+        
+
+        elif choice == 1:
             email = click.prompt("Email")
             password = click.prompt("Mot de passe", hide_input=True)
 

@@ -15,11 +15,12 @@ COMMON_READ_PERMISSIONS = [
 
 ROLE_PERMISSIONS = {
 
+
     #  GESTION :
        # Créer, mettre à jour et supprimer des collaborateurs; 
        # Filtrer l’affichage des événements, par exemple : afficher tous les événements qui n’ont pas de "support" associé
        # Modifier des événements (pour associer un collaborateur support à l’événement)
-    "gestion":         
+    "gestion":
         [
          "create_collaborator",
          "update_collaborator",

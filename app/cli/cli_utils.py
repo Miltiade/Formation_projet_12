@@ -44,3 +44,4 @@ def optional_prompt(label: str, current_value, converter=str) -> Optional[any]:
     except ValueError:
         click.echo(f"Format invalide, valeur ignorée.")
         return None
+
