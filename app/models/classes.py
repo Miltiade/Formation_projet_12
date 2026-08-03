@@ -72,16 +72,17 @@ class Collaborator:
 
 class Client:
     """A client of Epic Events, managed by a commercial collaborator."""
-    def __init__(self, full_name: str, email: str, phone: str,
+    def __init__(self, id: int, full_name: str, email: str, phone: str,
                 company_name: str, creation_date: str, last_update_date: str,
-                commercial_contact: Collaborator):
+                commercial_contact_id: int):
+        self.id = id
         self.full_name = full_name
         self.email = email
         self.phone = phone
         self.company_name = company_name
         self.creation_date = creation_date        # ISO format, e.g. '2025-01-15'
         self.last_update_date = last_update_date  # ISO format
-        self.commercial_contact = commercial_contact
+        self.commercial_contact_id = commercial_contact_id
 
     def __repr__(self):
         return f"Client(full_name={self.full_name!r}, company={self.company_name!r})"
@@ -96,15 +97,15 @@ class Contract:
     """
 
     def __init__(self, id: int, total_amount: float, remaining_amount: float,
-                creation_date: str, is_signed: bool, client: Client,
-                commercial_contact: Collaborator):
+                creation_date: str, is_signed: bool, client_id: int,
+                commercial_contact_id: int):
         self.id = id
         self.total_amount = total_amount
         self.remaining_amount = remaining_amount
         self.creation_date = creation_date  # ISO format
         self.is_signed = is_signed
-        self.client = client
-        self.commercial_contact = commercial_contact  # spec: "Contact commercial pour le contrat"
+        self.client_id = client_id
+        self.commercial_contact_id = commercial_contact_id  # spec: "Contact commercial pour le contrat"
 
     def __repr__(self):
         return f"Contract(id={self.id}, total={self.total_amount}, signed={self.is_signed})"
@@ -117,12 +118,12 @@ class Event:
     fields, as well as a 'name'. 'support_contact' may be None if not yet assigned.
     """
 
-    def __init__(self, name: str, id: int, client_name: str,
+    def __init__(self, id: int, name: str, client_name: str,
                 client_contact: str, date_start: str, date_end: str,
                 location: str, attendees: int, notes: str,
-                contract: Contract, support_contact: Collaborator = None):
-        self.name = name                    # e.g. "John Ouick Wedding"
+                contract_id: int, support_contact_id: int | None = None):
         self.id = id                        # Event ID
+        self.name = name                    # e.g. "John Ouick Wedding"
         self.client_name = client_name      # spec: "Client name"
         self.client_contact = client_contact  # spec: "Client contact" (email + phone)
         self.date_start = date_start        # ISO datetime
@@ -130,8 +131,8 @@ class Event:
         self.location = location
         self.attendees = attendees
         self.notes = notes
-        self.contract = contract
-        self.support_contact = support_contact  # None = unassigned
+        self.contract_id = contract_id
+        self.support_contact_id = support_contact_id  # None = unassigned
 
     def __repr__(self):
         return f"Event(name={self.name!r}, id={self.id}, start={self.date_start!r})"

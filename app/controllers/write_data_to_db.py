@@ -42,7 +42,7 @@ class DataWriter:
             with conn.cursor() as cur:
                 # Récupérer client et id commercial_contact
                 sql = """
-                SELECT full_name, email, phone, company_name, creation_date, last_update_date, commercial_contact
+                SELECT id, full_name, email, phone, company_name, creation_date, last_update_date, commercial_contact
                 FROM clients
                 WHERE id = %s
                 """
@@ -51,19 +51,20 @@ class DataWriter:
                 if row is None:
                     raise LookupError(f"Client ID {client_id} non trouvé.")
 
-                full_name, email, phone, company_name, creation_date, last_update_date, commercial_contact_id = row
+                id_, full_name, email, phone, company_name, creation_date, last_update_date, commercial_contact_id = row
 
                 # Récupérer le commercial_contact complet
-                commercial_contact = self.get_collaborator_by_id(commercial_contact_id)
+                # commercial_contact = self.get_collaborator_by_id(commercial_contact_id)
 
                 return Client(
+                    id=id_,
                     full_name=full_name,
                     email=email,
                     phone=phone,
                     company_name=company_name,
                     creation_date=creation_date,
                     last_update_date=last_update_date,
-                    commercial_contact=commercial_contact,
+                    commercial_contact_id=commercial_contact_id,
                 )
         finally:
             conn.close()
@@ -97,11 +98,51 @@ class DataWriter:
 
                 total_amount, remaining_amount, creation_date, is_signed, client_id, commercial_contact_id = row
 
-                # Récupérer les objets liés en réutilisant vos méthodes existantes
-                client_obj = self.get_client_by_id(client_id)
-                commercial_obj = self.get_collaborator_by_id(commercial_contact_id)
+                # Récupérer les objets liés en réutilisant les méthodes existantes
+                # client_obj = self.get_client_by_id(client_id)
+                # commercial_obj = self.get_collaborator_by_id(commercial_contact_id)
 
-                return Contract(contract_id, total_amount, remaining_amount, creation_date, is_signed, client_obj, commercial_obj)
+                return Contract(contract_id, total_amount, remaining_amount, creation_date, is_signed, client_id, commercial_contact_id)
+        finally:
+            conn.close()
+
+    def get_event_by_id(self, event_id: int) -> Event:
+        """
+        Récupère un événement par ID. Lève LookupError si introuvable.
+        
+        ⚠️ NOUVEAU: Cette méthode était manquante dans DataWriter.
+        Retourne un objet Event avec contract_id et support_contact_id (int).
+        """
+        conn = get_db_connection()
+        try:
+            with conn.cursor() as cur:
+                sql = """
+                SELECT id, name, client_name, client_contact, date_start, date_end,
+                       location, attendees, notes, contract_id, support_contact
+                FROM events
+                WHERE id = %s
+                """
+                cur.execute(sql, (event_id,))
+                row = cur.fetchone()
+                if row is None:
+                    raise LookupError(f"Événement ID {event_id} non trouvé.")
+
+                id_, name, client_name, client_contact, date_start, date_end, \
+                location, attendees, notes, contract_id, support_contact_id = row
+
+                return Event(
+                    id=id_,
+                    name=name,
+                    client_name=client_name,
+                    client_contact=client_contact,
+                    date_start=date_start,
+                    date_end=date_end,
+                    location=location,
+                    attendees=attendees,
+                    notes=notes,
+                    contract_id=contract_id,
+                    support_contact_id=support_contact_id
+                )
         finally:
             conn.close()
 
@@ -336,7 +377,7 @@ class DataWriter:
             company_name=company_name,
             creation_date=creation_date,
             last_update_date=creation_date,
-            commercial_contact=commercial_obj,
+            commercial_contact_id=commercial_contact_id,
         )
 
     def update_client(
@@ -453,9 +494,17 @@ class DataWriter:
                 raise PermissionError("Permission insuffisante pour créer un contrat.")
         else:
             raise PermissionError("Permission insuffisante.")
+        
+        # Valider existence des références
+        try:
+            _ = self.get_client_by_id(client_id)
+        except LookupError:
+            raise LookupError(f"Client ID {client_id} non trouvé.")
 
-        client_obj = self.get_client_by_id(client_id)
-        commercial_obj = self.get_collaborator_by_id(commercial_contact_id)
+        try:
+            _ = self.get_collaborator_by_id(commercial_contact_id)
+        except LookupError:
+            raise LookupError(f"Collaborateur ID {commercial_contact_id} non trouvé.")
 
         # Valider montants
         if total_amount <= 0:
@@ -484,7 +533,7 @@ class DataWriter:
             conn.close()
 
         # Retourner l’objet Contract avec l’id généré
-        return Contract(contract_id, total_amount, remaining_amount, creation_date, is_signed, client_obj, commercial_obj)
+        return Contract(contract_id, total_amount, remaining_amount, creation_date, is_signed, client_id, commercial_contact_id)
 
     def update_contract(self, contract_id: int,
                         total_amount: Optional[float] = None,
@@ -655,15 +704,14 @@ class DataWriter:
 
         # Vérifier existence du contrat
         try:
-            contract_obj = self.get_contract_by_id(contract_id)
+            _ = self.get_contract_by_id(contract_id)
         except LookupError:
             raise LookupError(f"Contrat ID {contract_id} non trouvé.")
 
-        # Vérifier existence du support_contact si fourni
-        support_contact_obj = None
+        # Validation du support_contact si fourni
         if support_contact_id is not None:
             try:
-                support_contact_obj = self.get_collaborator_by_id(support_contact_id)
+                _ = self.get_collaborator_by_id(support_contact_id)
             except LookupError:
                 raise LookupError(f"Collaborateur ID {support_contact_id} non trouvé.")
 
@@ -697,8 +745,8 @@ class DataWriter:
             location=location,
             attendees=attendees,
             notes=notes,
-            contract=contract_obj,
-            support_contact=support_contact_obj
+            contract_id=contract_id,
+            support_contact_id=support_contact_id
         )
 
     def update_event(

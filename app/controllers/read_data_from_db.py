@@ -60,41 +60,41 @@ class DataReader:
         ]
         return collaborators
 
-    def get_collaborator_by_id(self, collaborator_id: int) -> dict:
-        """
-        Récupère un collaborateur par ID.
-        Returns:
-            dict: Collaborateur sous forme de dictionnaire.
-        Raises:
-            LookupError: Si collaborateur non trouvé.
-            PermissionError: Si utilisateur non authentifié.
-        """
-        if self.user is None:
-            raise PermissionError("Utilisateur non authentifié.")
+    # def get_collaborator_by_id(self, collaborator_id: int) -> dict:
+    #     """
+    #     Récupère un collaborateur par ID.
+    #     Returns:
+    #         dict: Collaborateur sous forme de dictionnaire.
+    #     Raises:
+    #         LookupError: Si collaborateur non trouvé.
+    #         PermissionError: Si utilisateur non authentifié.
+    #     """
+    #     if self.user is None:
+    #         raise PermissionError("Utilisateur non authentifié.")
         
-        rows = self._fetch_all(
-            "SELECT id, username, email, department FROM collaborators WHERE id = %s",
-        )
-        # Execute with parameterized query
-        conn = get_db_connection()
-        try:
-            with conn.cursor() as cur:
-                cur.execute(
-                    "SELECT id, username, email, department FROM collaborators WHERE id = %s",
-                    (collaborator_id,)
-                )
-                row = cur.fetchone()
-                if row is None:
-                    raise LookupError(f"Collaborateur ID {collaborator_id} introuvable.")
+    #     rows = self._fetch_all(
+    #         "SELECT id, username, email, department FROM collaborators WHERE id = %s",
+    #     )
+    #     # Execute with parameterized query
+    #     conn = get_db_connection()
+    #     try:
+    #         with conn.cursor() as cur:
+    #             cur.execute(
+    #                 "SELECT id, username, email, department FROM collaborators WHERE id = %s",
+    #                 (collaborator_id,)
+    #             )
+    #             row = cur.fetchone()
+    #             if row is None:
+    #                 raise LookupError(f"Collaborateur ID {collaborator_id} introuvable.")
                 
-                return {
-                    "id": row[0],
-                    "username": row[1],
-                    "email": row[2],
-                    "department": row[3]
-                }
-        finally:
-            conn.close()
+    #             return {
+    #                 "id": row[0],
+    #                 "username": row[1],
+    #                 "email": row[2],
+    #                 "department": row[3]
+    #             }
+    #     finally:
+    #         conn.close()
 
     # ==================== CLIENTS ====================
     
@@ -122,7 +122,7 @@ class DataReader:
                 "phone": r[3],
                 "company_name": r[4],
                 "creation_date": r[5],
-                "commercial_contact": r[6]
+                "commercial_contact_id": r[6]
             }
             for r in rows
         ]
@@ -158,7 +158,7 @@ class DataReader:
                     "phone": row[3],
                     "company_name": row[4],
                     "creation_date": row[5],
-                    "commercial_contact": row[6]
+                    "commercial_contact_id": row[6]
                 }
         finally:
             conn.close()
@@ -246,7 +246,7 @@ class DataReader:
         return [{
             "id": r[0], "name": r[1], "client_name": r[2], "client_contact": r[3],
             "date_start": r[4], "date_end": r[5], "location": r[6],
-            "attendees": r[7], "notes": r[8], "contract_id": r[9], "support_contact": r[10]
+            "attendees": r[7], "notes": r[8], "contract_id": r[9], "support_contact_id": r[10]
         } for r in rows]
 
     def get_event_by_id(self, event_id: int) -> dict:
@@ -265,7 +265,7 @@ class DataReader:
         try:
             with conn.cursor() as cur:
                 cur.execute(
-                    "SELECT id, title, description, start_date, end_date, contract_id FROM events WHERE id = %s",
+                    "SELECT id, name, client_name, client_contact, date_start, date_end, location, attendees, notes, contract_id, support_contact FROM events WHERE id = %s",
                     (event_id,)
                 )
                 row = cur.fetchone()
@@ -274,11 +274,16 @@ class DataReader:
                 
                 return {
                     "id": row[0],
-                    "title": row[1],
-                    "description": row[2],
-                    "start_date": row[3],
-                    "end_date": row[4],
-                    "contract_id": row[5]
+                    "name": row[1],
+                    "client_name": row[2],
+                    "client_contact": row[3],
+                    "date_start": row[4],
+                    "date_end": row[5],
+                    "location": row[6],
+                    "attendees": row[7],
+                    "notes": row[8],
+                    "contract_id": row[9],
+                    "support_contact_id": row[10]
                 }
         finally:
             conn.close()
