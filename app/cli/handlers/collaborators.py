@@ -25,8 +25,9 @@ def create_collaborator(user):
         )
         department_name = dept_str.capitalize()
 
+        # Create collaborator
         collaborator = dw.create_collaborator(username, email, password, department_name)
-        click.echo(f"→ Collaborateur créé : ID {collaborator.id}, {collaborator.username}")
+        click.echo(f"→ Collaborateur créé : ID {collaborator.id}, username={collaborator.username}, rôle={collaborator.role}")
 
     except PermissionError as pe:
         click.echo(f"Permission refusée : {pe}")
@@ -89,6 +90,7 @@ def update_collaborator(user):
             click.echo("Aucun changement apporté.")
             return
 
+        # Update collaborator
         dw.update_collaborator(selected_id, **changes)
         click.echo("→ Collaborateur mis à jour.")
 
@@ -105,8 +107,8 @@ def delete_collaborator(user):
     Propose une sélection, puis demande confirmation.
     Vérifie que `user` a la permission.
     """
-    # NOTE: Needs delete_collaborator() method in DataWriter first
     dr = DataReader(user)
+    dw = DataWriter(user)
 
     selected_id = select_record(
         "collaborateur",
@@ -116,16 +118,26 @@ def delete_collaborator(user):
     if not selected_id:
         return
 
-    if not click.confirm(f"Êtes-vous sûr de vouloir supprimer ce collaborateur (ID {selected_id}) ?"):
-        click.echo("Annulé.")
-        return
-
     try:
-        # TODO: Implement delete_collaborator() in DataWriter
-        dw = DataWriter(user)
-        # dw.delete_collaborator(selected_id)
-        click.echo("Fonctionnalité 'delete_collaborator' manquante dans DataWriter - à implémenter.")
+        collaborator_list = DataReader(user).get_all_collaborators()
+        target = next((c for c in collaborator_list if c["id"] == selected_id), None)
+        if not target:
+            click.echo("Collaborateur introuvable.")
+            return
+
+        click.echo(f"Attention : vous allez supprimer le collaborateur '{target['username']}' (ID {target['id']}).")
+        confirm = click.confirm("Êtes-vous sûr de vouloir continuer ?", default=False)
+        if not confirm:
+            click.echo("Annulation.")
+            return
+
+        # Delete collaborator
+        dw.delete_collaborator(selected_id)
+        click.echo("→ Collaborateur supprimé.")
+
     except PermissionError as pe:
         click.echo(f"Permission refusée : {pe}")
+    except LookupError as le:
+        click.echo(f"Collaborateur introuvable : {le}")
     except Exception as e:
         click.echo(f"Erreur lors de la suppression : {e}")

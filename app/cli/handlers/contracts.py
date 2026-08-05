@@ -31,20 +31,25 @@ def create_contract(user):
             return
         
         # Select commercial contact from list
-        commercial_id = select_record(
+        commercial_contact_id = select_record(
             "collaborateur",
             dr.get_all_collaborators,
             display_field="username"
         )
-        if not commercial_id:
+        if not commercial_contact_id:
             click.echo("Annulation.")
             return
 
         contract = dw.create_contract(
-            total_amount, remaining_amount, creation_date,
-            is_signed, client_id, commercial_id
+            total_amount=total_amount,
+            remaining_amount=remaining_amount,
+            creation_date=creation_date,
+            is_signed=is_signed,
+            client_id=client_id,
+            commercial_contact_id=commercial_contact_id
         )
-        click.echo(f"→ Contrat créé : ID {contract.id}, montant={contract.total_amount}")
+        click.echo(f"→ Contrat créé : ID {contract.id}, montant={contract.total_amount}€")
+
 
     except PermissionError as pe:
         click.echo(f"Permission refusée : {pe}")
@@ -66,7 +71,7 @@ def update_assigned_contract(user):
     selected_id = select_record(
         "contrat",
         dr.get_all_contracts,
-        display_field="id"  # Or could show client name
+        display_field="id"
     )
     if not selected_id:
         return
@@ -108,6 +113,7 @@ def update_assigned_contract(user):
             click.echo("Aucun changement apporté.")
             return
 
+        # Apply changes to contract
         dw.update_contract(selected_id, **changes)
         click.echo("→ Contrat mis à jour.")
 

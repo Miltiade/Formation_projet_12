@@ -13,6 +13,7 @@ def create_client(user):
     Vérifie que `user` a la permission.
     """
     dw = DataWriter(user)
+    dr = DataReader(user)
 
     click.echo("Création d’un nouveau client.")
 
@@ -22,10 +23,24 @@ def create_client(user):
         phone = click.prompt("Telephone", type=str)
         company_name = click.prompt("Nom de l'entreprise", type=str)
         creation_date = click.prompt("Date de création", type=str)        # ISO format, e.g. '2025-01-15'
-        # last_update_date = click.prompt
-        commercial_contact = click.prompt("Contact commercial chez Epic Event", type=str) # type is collaborator ID
+        commercial_contact_id = select_record(
+            "collaborateur",
+            lambda: dr.get_all_collaborators(),
+            display_field="username"
+        )
+        if not commercial_contact_id:
+            click.echo("Annulation.")
+            return
 
-        client = dw.create_client(full_name, email, phone, company_name, creation_date, commercial_contact)
+        client = dw.create_client(
+            full_name=full_name,
+            email=email,
+            phone=phone,
+            company_name=company_name,
+            creation_date=creation_date,
+            commercial_contact_id=commercial_contact_id
+        )
+
 
     except PermissionError as pe:
         click.echo(f"Permission refusée : {pe}")
@@ -37,7 +52,12 @@ def create_client(user):
         click.echo(f"Erreur lors de la création : {e}")
         return
 
-    click.echo(f"Client créé avec succès : full_name {client.full_name}, email {client.email}, phone{client.phone}, company_name{client.company_name}, creation_date{client.creation_date}, commercial_contact{client.commercial_contact}")
+    click.echo(
+        f"Client créé avec succès : ID {client.id}, "
+        f"nom='{client.full_name}', email={client.email}, "
+        f"tel={client.phone}, entreprise={client.company_name}, "
+        f"créé_le={client.creation_date}, commercial_id={client.commercial_contact_id}"
+    )
 
 def update_assigned_client(user):
     """
@@ -45,32 +65,49 @@ def update_assigned_client(user):
     Charge les clients assignés et permet modification.
     Vérifie que `user` a la permission.
     """
-    selected_id = select_record(user, "client", DataReader(user).get_all_clients)
+
+    dr = DataReader(user)
+    dw = DataWriter(user)
+
+    # Select client
+    selected_id = select_record(
+    "client",
+    dr.get_all_clients,
+    display_field="full_name"
+)
     if selected_id is None:
         return
 
     try:
-        reader = DataReader(user)
-        client_list = reader.get_all_clients()
-        client_dict = next((c for c in client_list if c["id"] == selected_id), None)
-        if not client_dict:
+        # Get client data
+        client_list = dr.get_all_clients()
+        target = next((c for c in client_list if c["id"] == selected_id), None)
+        if not target:
             click.echo("Client introuvable.")
             return
-        
-        updates = optional_prompt(client_dict, {
-            "full_name": ("Nom complet", str),
-            "email": ("Email", str),
-            "phone": ("Téléphone", str),
-            "company_name": ("Nom entreprise", str),
-        })
 
-        if not updates:
+        # Update client data
+        updates = {}
+
+        updates["full_name"] = optional_prompt("Nom complet", target.get("full_name", ""))
+        updates["email"] = optional_prompt("Email", target.get("email", ""))
+        updates["phone"] = optional_prompt("Téléphone", target.get("phone", ""))
+        updates["company_name"] = optional_prompt("Nom entreprise", target.get("company_name", ""))
+
+        # Filter out None values
+        changes = {k: v for k, v in updates.items() if v is not None}
+
+        if not changes:
             click.echo("Aucun changement apporté.")
             return
 
-        click.echo(f"Mise à jour prête : {updates}")
+        # Apply updates to client data
+        dw.update_client(selected_id, **changes)
+        click.echo("→ Client mis à jour.")
         
     except PermissionError as pe:
         click.echo(f"Permission refusée : {pe}")
+    except ValueError as ve:
+        click.echo(f"Erreur de saisie : {ve}")
     except Exception as e:
         click.echo(f"Erreur lors de la mise à jour : {e}")

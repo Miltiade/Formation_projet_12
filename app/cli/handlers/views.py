@@ -92,7 +92,7 @@ def view_client(user):
         click.echo(f"Téléphone : {client.get('phone', '')}")
         click.echo(f"Entreprise : {client.get('company_name', '')}")
         click.echo(f"Créé le : {client.get('creation_date', '')}")
-        click.echo(f"Contact commercial ID : {client.get('commercial_contact', '')}")
+        click.echo(f"Contact commercial ID : {client.get('commercial_contact_id', 'N/A')}")
             
     except PermissionError as pe:
         click.echo(f"Permission refusée : {pe}")
@@ -149,7 +149,7 @@ def view_event(user):
         click.echo(f"Convives : {event.get('attendees', '')}")
         click.echo(f"Notes : {event.get('notes', '')}")
         click.echo(f"Contrat ID : {event.get('contract_id', '')}")
-        click.echo(f"Support ID : {event.get('support_contact') or 'Non assigné'}")
+        click.echo(f"Support ID : {event.get('support_contact_id') or 'Non assigné'}")
             
     except PermissionError as pe:
         click.echo(f"Permission refusée : {pe}")
@@ -181,7 +181,7 @@ def filter_events_view(user):
         filtered_events = all_events
         
         if choice == 2:
-            filtered_events = [e for e in all_events if e.get('support_contact') is None]
+            filtered_events = [e for e in all_events if e.get('support_contact_id') is None]
             click.echo(f"Filtrage : événements sans support ({len(filtered_events)} trouvé(s))")
         elif choice == 3:
             start_filter = click.prompt("Date début filtre (AAA-MM-JJ)", type=str)

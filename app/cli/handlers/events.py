@@ -17,6 +17,7 @@ def create_event(user):
     click.echo("Création d’un nouvel événement.")
 
     try:
+        name = click.prompt("Nom de l'événement", type=str)
         client_name = click.prompt("Nom complet du client", type=str)
         client_contact = click.prompt("Coordonnées du client (email+téléphone)", type=str) 
         date_start = click.prompt("Date de début", type=str) 
@@ -24,10 +25,40 @@ def create_event(user):
         location = click.prompt("Lieu", type=str) 
         attendees = click.prompt("Nombre de convives", type=int) 
         notes = click.prompt("Remarques", type=str)
-        contract = click.prompt("Contrat associé à cet événement", type=str) # type is contract ID
-        support_contact = click.prompt("Contact support chez Epic Event", type=str) # type is collaborator ID
+
+        # Utilisation de select_record pour contract_id (évite erreurs de saisie manuelle)
+        contract_id = select_record(
+            "contrat",
+            lambda: DataReader(user).get_all_contracts(),
+            display_field="id"
+        )
+        if not contract_id:
+            click.echo("Annulation.")
+            return
+
+        # support_contact_id est optionnel (None autorisé)
+        if click.confirm("Assigner un support ?", default=False):
+            support_id = select_record(
+                "collaborateur",
+                lambda: DataReader(user).get_all_collaborators(),
+                display_field="username"
+            )
+            support_contact_id = support_id if support_id else None
+        else:
+            support_contact_id = None
         
-        event = dw.create_event(id, client_name, client_contact, date_start, date_end, location, attendees, notes, contract, support_contact)
+        event = dw.create_event(
+            name=name,
+            client_name=client_name,
+            client_contact=client_contact,
+            date_start=date_start,
+            date_end=date_end,
+            location=location,
+            attendees=attendees,
+            notes=notes,
+            contract_id=contract_id,
+            support_contact_id=support_contact_id
+        )
 
     except PermissionError as pe:
         click.echo(f"Permission refusée : {pe}")
@@ -39,7 +70,15 @@ def create_event(user):
         click.echo(f"Erreur lors de la création : {e}")
         return
 
-    click.echo(f"Evénement créé avec succès : ID {event.id}, client_name{event.client_name}, client_contact{event.client_contact}, date_start{event.date_start}, date_end{event.date_end}, location{event.location}, attendees{event.attendees}, notes{event.notes}, contract{event.contract}, support_contact{event.support_contact}")
+    # Affichage des données
+    support_display = event.support_contact_id or "Non assigné"
+    click.echo(
+        f"Événement créé avec succès : ID {event.id}, "
+        f"nom='{event.name}', client='{event.client_name}', "
+        f"début={event.date_start}, fin={event.date_end}, "
+        f"lieu={event.location}, convives={event.attendees}, "
+        f"contrat_id={event.contract_id}, support_id={support_display}"
+    )
 
 def update_assigned_event(user):
     """
@@ -132,8 +171,7 @@ def assign_event_support(user):
         click.echo("Annulation.")
         return
 
-    try:
-        # This requires update_event() with support_contact_id parameter OR dedicated method
+    try:        
         dw.update_event(selected_id, support_contact_id=support_id)
         click.echo("→ Support assigné avec succès.")
     except PermissionError as pe:
