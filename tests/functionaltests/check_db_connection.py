@@ -1,4 +1,4 @@
-from app.open_db_connection import get_db_connection
+from app.utils import get_db_connection
 
 def main():
     conn = get_db_connection()
