@@ -568,10 +568,10 @@ class DataWriter:
 
         # Exemple logique de permission ; ajustez selon votre politique
         if self.user.role == "commercial":
-            if not has_permission(self.user, "update_contract"):
+            if not has_permission(self.user, "update_assigned_contract"):
                 raise PermissionError("Permission insuffisante pour modifier ce contrat.")
         elif self.user.role == "gestion":
-            if not has_permission(self.user, "update_contract"):
+            if not has_permission(self.user, "update_assigned_contract"):
                 raise PermissionError("Permission insuffisante pour modifier ce contrat.")
         else:
             raise PermissionError("Permission insuffisante.")
@@ -767,7 +767,11 @@ class DataWriter:
         Met à jour un événement existant.
         Correspond au modèle Event dans classes.py.
         """
-        if self.user is None or not has_permission(self.user, "update_event"):
+        allowed = (
+            has_permission(self.user, "update_assigned_event")
+            or has_permission(self.user, "assign_event_support")
+        )
+        if self.user is None or not allowed:
             raise PermissionError("Permission refusée pour modifier un événement.")
 
         conn = get_db_connection()
