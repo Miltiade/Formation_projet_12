@@ -149,13 +149,8 @@ def show_main_menu(user):
             click.echo(f"Action '{label_chosen}' non implémentée.")
             continue
 
-        # Execute the handler.
-        # View handlers need no arguments; action handlers receive the current user.
+        # Execute the handler — all handlers take the current user as argument.
         try:
-            if perm_chosen.startswith("view_"):
-                handler()
-            else:
-                handler(user)
+            handler(user)
         except Exception as e:
             click.echo(f"Erreur lors de l'exécution de '{label_chosen}': {e}")
-
