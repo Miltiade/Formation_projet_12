@@ -7,5 +7,6 @@ mysql-connector-python==9.7.0
 pycparser==3.0
 PyJWT==2.13.0
 PyMySQL==1.2.0
+python-dotenv==1.2.2
 SQLAlchemy==2.0.50
 typing_extensions==4.15.0
