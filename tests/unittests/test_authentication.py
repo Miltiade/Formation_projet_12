@@ -1,3 +1,5 @@
+"""Tests: authentication features"""
+
 import unittest
 from unittest.mock import patch, MagicMock
 from app.controllers.authentication import UserManager, AuthService

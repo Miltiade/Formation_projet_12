@@ -1,3 +1,9 @@
+"""TESTS:
+    test_department_role_mapping,
+    test_collaborator_attributes_and_password_hashing,
+    test_user_creation_and_authentication,
+    test_permissions_roles"""
+
 from app.models.classes import Collaborator, Department
 from app.controllers.authentication import UserManager
 from app.controllers.authorizations import get_permissions, has_permission

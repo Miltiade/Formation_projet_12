@@ -1,8 +1,9 @@
+"""Tests unitaires pour la classe Collaborator."""
+
 import unittest
 from app.models.classes import Collaborator, Department
 
-class TestCollaborator(unittest.TestCase):
-    """Tests unitaires pour la classe Collaborator."""
+class TestCollaborator(unittest.TestCase):    
 
     def setUp(self):
         """

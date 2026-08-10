@@ -1,3 +1,5 @@
+"""A script that checks if connection to DB actually happens"""
+
 from utils.open_db_connection import get_db_connection
 
 def main():

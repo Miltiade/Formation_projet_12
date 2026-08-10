@@ -17,17 +17,17 @@ Commande :
 Output attendu :
     🚀 Lancement des tests UNITAIRES...
     ................................................................
-    Ran 15 tests in 0.023s
+    Ran *** tests in ***s
     
     OK
     
     🚀 Lancement des tests INTÉGRATION...
     ....
-    Ran 4 tests in 0.156s
+    Ran *** tests in ***s
     
     OK
     
-    ... (suites) ...
+    ... (suite) ...
     
     ============================================================
     ✅ TOUS LES TESTS ONT RÉUSSI — SYSTÈME PRÊT POUR DÉMO
@@ -126,9 +126,7 @@ def run_test_suite(display_name, discover_path, pattern="test_*.py"):
 
 def main():
     """
-    Point d'entrée principal du script de test.
-    
-    Orchestre l'exécution de TOUS les tests dans l'ordre logique :
+    Orchestre l'exécution de TOUS les tests dans l'ordre :
       1. Tests unitaires (rapides, sans DB)
       2. Tests d'intégration (avec mocks partiels)
       3. Tests fonctionnels (scénarios complets)
@@ -140,7 +138,7 @@ def main():
         1 : Un ou plusieurs tests ont échoué
     """
     print("\n" + "=" * 60)
-    print("🧪 EPIC EVENTS CRM - SUITE COMPLÈTE DE TESTS AUTOMATISÉS")
+    print("🧪 EPIC EVENTS CRM - TESTS AUTOMATISÉS")
     print(f"📅 Date d'exécution : {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}")
     print("=" * 60)
     
@@ -153,7 +151,7 @@ def main():
     # ÉTAPE 1 : Tests Unitaires (Logique métier pure - MOCKS)
     # ------------------------------------------------------------------------
     print_separator("PHASE 1 / 3 : TESTS UNITAIRES")
-    print("(Logique métier, modèles, hashage - Sans connexion DB réelle)\n")
+    print("(Logique métier, modèles, hashage - Sans connexion DB)\n")
     
     result_unit = run_test_suite(
         display_name="UNITAIRES",
@@ -165,7 +163,7 @@ def main():
     total_failures += len(result_unit.failures)
     
     if result_unit.wasSuccessful():
-        print("✅ Tests unitaires : TOUT EST VERT")
+        print("✅ Tests unitaires : VERT")
     else:
         print("❌ Tests unitaires : ERREURS DETECTÉES")
     
@@ -187,7 +185,7 @@ def main():
     total_failures += len(result_integration.failures)
     
     if result_integration.wasSuccessful():
-        print("✅ Tests d'intégration : TOUT EST VERT")
+        print("✅ Tests d'intégration : VERT")
     else:
         print("❌ Tests d'intégration : ERREURS DETECTÉES")
     
@@ -209,7 +207,7 @@ def main():
     total_failures += len(result_functional.failures)
     
     if result_functional.wasSuccessful():
-        print("✅ Tests fonctionnels : TOUT EST VERT")
+        print("✅ Tests fonctionnels : VERT")
     else:
         print("❌ Tests fonctionnels : ERREURS DETECTÉES")
     
@@ -233,14 +231,12 @@ Durée estimée totale : ~2 minutes
     # Bannière de verdict FINAL
     if total_errors == 0 and total_failures == 0:
         print("=" * 60)
-        print("✅ ✅ ✅ TOUS LES TESTS ONT RÉUSSI ✅ ✅ ✅")
-        print("   LE SYSTÈME EST PRÊT POUR PRÉSENTATION CLIENT")
+        print("✅ TOUS LES TESTS ONT RÉUSSI ✅")
         print("=" * 60)
         sys.exit(0)
     else:
         print("=" * 60)
-        print("❌ ❌ ❌ ERREURS DÉTECTÉES ❌ ❌ ❌")
-        print("   NE PAS PROPOSER DE DÉMO AU CLIENT")
+        print("❌ ERREURS DÉTECTÉES ❌")
         print(f"   Corrections nécessaires : {total_errors} erreurs, {total_failures} échecs")
         print("=" * 60)
         sys.exit(1)
@@ -248,32 +244,8 @@ Durée estimée totale : ~2 minutes
 
 if __name__ == '__main__':
     """
-    Point d'entrée lorsque ce fichier est lancé directement.
-    
+    Point d'entrée lorsque ce fichier est lancé directement.    
     Usage :
         python run_tests.py
-    
-    Exemple de sortie attendue :
-    ============================================================
-     🧪 EPIC EVENTS CRM - SUITE COMPLÈTE DE TESTS AUTOMATISÉS
-    ============================================================
-    
-    ============================================================
-     PHASE 1 / 3 : TESTS UNITAIRES
-    ============================================================
-    (...)
-    ✅ Tests unitaires : TOUT EST VERT
-    
-    (...)
-    
-    ============================================================
-     📋 RAPPORT SYNTHÉTIQUE FINAL
-    ============================================================
-    [...]
-    
-    ============================================================
-     ✅ ✅ ✅ TOUS LES TESTS ONT RÉUSSI ✅ ✅ ✅
-        LE SYSTÈME EST PRÊT POUR PRÉSENTATION CLIENT
-    ============================================================
     """
     main()
