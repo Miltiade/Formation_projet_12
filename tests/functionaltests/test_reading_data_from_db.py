@@ -20,28 +20,28 @@ class TestDataReader(unittest.TestCase):
         self.user = Collaborator(1, "testuser", "test@example.com", "secret", dept)
         self.reader = DataReader(self.user)
 
-    @patch("app.controllers.read_data_from_db.get_db_connection")
-    @patch("app.controllers.read_data_from_db.has_permission")
-    def test_get_all_clients_success(self, mock_has_perm, mock_get_conn):
-        # Simuler permission accordée
-        mock_has_perm.return_value = True
+        @patch("app.controllers.read_data_from_db.get_db_connection")
+        @patch("app.controllers.read_data_from_db.has_permission")
+        def test_get_all_clients_success(self, mock_has_perm, mock_get_conn):
+            # Simuler permission accordée
+            mock_has_perm.return_value = True
 
-        # Simuler connexion et curseur
-        fake_cursor = MagicMock()
-        fake_cursor.fetchall.return_value = [
-            (1, "Client A", "a@example.com"),
-            (2, "Client B", "b@example.com"),
-        ]
-        fake_conn = MagicMock()
-        fake_conn.cursor.return_value.__enter__.return_value = fake_cursor
-        mock_get_conn.return_value = fake_conn
+            # Simuler connexion et curseur — 7 colonnes comme le SELECT réel
+            fake_cursor = MagicMock()
+            fake_cursor.fetchall.return_value = [
+                (1, "Client A", "a@example.com", "+33611111111", "Company A", "2025-01-01", 10),
+                (2, "Client B", "b@example.com", "+33622222222", "Company B", "2025-01-02", 20),
+            ]
+            fake_conn = MagicMock()
+            fake_conn.cursor.return_value.__enter__.return_value = fake_cursor
+            mock_get_conn.return_value = fake_conn
 
-        clients = self.reader.get_all_clients()
+            clients = self.reader.get_all_clients()
 
-        self.assertEqual(len(clients), 2)
-        self.assertEqual(clients[0]["name"], "Client A")
-        self.assertEqual(clients[1]["email"], "b@example.com")
-        mock_has_perm.assert_called_once_with(self.user, "view_all_clients")
+            self.assertEqual(len(clients), 2)
+            self.assertEqual(clients[0]["full_name"], "Client A")
+            self.assertEqual(clients[1]["email"], "b@example.com")
+            mock_has_perm.assert_called_once_with(self.user, "view_all_clients")
 
     @patch("app.controllers.read_data_from_db.has_permission")
     def test_get_all_clients_no_permission(self, mock_has_perm):
