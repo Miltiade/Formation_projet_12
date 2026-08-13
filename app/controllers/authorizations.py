@@ -25,8 +25,8 @@ ROLE_PERMISSIONS = {
          "create_collaborator",
          "update_collaborator",
          "delete_collaborator",
-         "create_contract"
-         "update_contract"        
+         "create_contract",
+         "update_contract",       
          "filter_events_view",
         "assign_event_support"
          ],

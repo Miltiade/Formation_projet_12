@@ -58,6 +58,16 @@ def create_contract(user):
     except Exception as e:
         click.echo(f"Erreur lors de la création : {e}")
 
+def update_contract(user):
+    """Modifie un contrat dans la base.
+    Collecte les données nécessaires via prompts CLI.
+    Vérifie que `user` a la permission.
+    """
+    dw = DataWriter(user)
+    dr = DataReader(user)
+
+
+
 def update_assigned_contract(user):
     """
     Modifie un contrat assigné à `user`.

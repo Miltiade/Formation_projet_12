@@ -11,7 +11,7 @@ from app.controllers.authorizations import get_permissions
 from app.cli.handlers import (
     create_collaborator, update_collaborator, delete_collaborator,
     create_client, update_assigned_client,
-    create_contract, update_assigned_contract,
+    create_contract, update_contract, update_assigned_contract,
     create_event, update_assigned_event, assign_event_support,
     filter_events_view, filter_contracts_view,
 )
@@ -55,7 +55,7 @@ def show_main_menu(user):
             "update_collaborator": "Modifier un collaborateur",
             "delete_collaborator": "Supprimer un collaborateur",
             "create_contract": "Créer un contrat",
-            "update_assigned_contract": "Modifier un contrat",
+            "update_contract": "Modifier un contrat",
             "filter_events_view": "Filtrer les événements",
             "assign_event_support": "Assigner support à un événement",
         },
@@ -107,6 +107,7 @@ def show_main_menu(user):
         "create_client": create_client,
         "update_assigned_client": update_assigned_client,
         "create_contract": create_contract,
+        "update_contract": update_contract,
         "update_assigned_contract": update_assigned_contract,
         "filter_contracts_view": filter_contracts_view,
         "create_event": create_event,
