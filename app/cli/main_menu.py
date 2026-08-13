@@ -55,7 +55,7 @@ def show_main_menu(user):
             "update_collaborator": "Modifier un collaborateur",
             "delete_collaborator": "Supprimer un collaborateur",
             "create_contract": "Créer un contrat",
-            "update_contract": "Modifier un contrat",
+            "update_assigned_contract": "Modifier un contrat",
             "filter_events_view": "Filtrer les événements",
             "assign_event_support": "Assigner support à un événement",
         },
