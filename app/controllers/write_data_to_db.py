@@ -322,17 +322,8 @@ class DataWriter:
             Client: Instance créée.
         """
         # Vérifier permission
-        if self.user is None:
-            raise PermissionError("Utilisateur non authentifié.")
-        
-        if self.user.role == "commercial":
-            if not has_permission(self.user, "create_client"):
-                raise PermissionError("Permission insuffisante pour créer un client.")
-        elif self.user.role == "gestion":
-            if not has_permission(self.user, "create_collaborator"):  # Gestion can create clients too
-                raise PermissionError("Permission insuffisante pour créer un client.")
-        else:
-            raise PermissionError("Permission insuffisante.")
+        if self.user is None or not has_permission(self.user, "create_client"):
+            raise PermissionError("Permission insuffisante pour créer un client.")
 
         # Validation simple
         if not full_name.strip():
@@ -402,18 +393,9 @@ class DataWriter:
         Raises:
             PermissionError, ValueError, LookupError, pymysql.MySQLError.
         """
-        # Vérifier utilisateur et permission
-        if self.user is None:
-            raise PermissionError("Utilisateur non authentifié.")
-
-        if self.user.role == "commercial":
-            if not has_permission(self.user, "update_assigned_client"):
-                raise PermissionError("Permission insuffisante pour modifier ce client.")
-        elif self.user.role == "gestion":
-            if not has_permission(self.user, "update_collaborator"):  # Gestion can update all
-                raise PermissionError("Permission insuffisante pour modifier ce client.")
-        else:
-            raise PermissionError("Permission insuffisante.")
+        # Vérifier permission
+        if self.user is None or not has_permission(self.user, "update_assigned_client"):
+            raise PermissionError("Permission insuffisante pour modifier ce client.")
 
         # Vérifier que le client existe
         conn = get_db_connection()
@@ -482,19 +464,8 @@ class DataWriter:
         """
 
         # Vérifier permission
-        if self.user is None:
-            raise PermissionError("Utilisateur non authentifié.")
-
-        if self.user.role == "commercial":
-            # Permission commercial : uniquement sur ses contrats assignés
-            if not has_permission(self.user, "create_client"):
-                raise PermissionError("Permission insuffisante pour créer un contrat.")
-        elif self.user.role == "gestion":
-            # Permission support : sur aucun contrat
-            if not has_permission(self.user, "create_contract"):
-                raise PermissionError("Permission insuffisante pour créer un contrat.")
-        else:
-            raise PermissionError("Permission insuffisante.")
+        if self.user is None or not has_permission(self.user, "create_contract"):
+            raise PermissionError("Permission insuffisante pour créer un contrat.")
         
         # Valider existence des références
         try:
@@ -563,19 +534,16 @@ class DataWriter:
             pymysql.MySQLError: erreur base.
         """
 
-        # Vérifier utilisateur et permission
+        # Vérifier permission
         if self.user is None:
             raise PermissionError("Utilisateur non authentifié.")
 
-        # Exemple logique de permission ; ajustez selon votre politique
-        if self.user.role == "commercial":
-            if not has_permission(self.user, "update_assigned_contract"):
-                raise PermissionError("Permission insuffisante pour modifier ce contrat.")
-        elif self.user.role == "gestion":
-            if not has_permission(self.user, "update_assigned_contract"):
-                raise PermissionError("Permission insuffisante pour modifier ce contrat.")
-        else:
-            raise PermissionError("Permission insuffisante.")
+        allowed = (
+            has_permission(self.user, "update_contract")           # Gestion: all contracts
+            or has_permission(self.user, "update_assigned_contract")  # Commercial: own contracts conly
+        )
+        if not allowed:
+            raise PermissionError("Permission insuffisante pour modifier ce contrat.")
 
         # Vérifier que le contrat existe
         conn = get_db_connection()
