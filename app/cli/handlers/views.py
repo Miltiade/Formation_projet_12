@@ -160,92 +160,49 @@ def view_event(user):
 
 # ==================== FILTERED VIEWS ====================
 
-def filter_events_view(user):
-    """Affiche une liste filtrée d'événements selon des critères."""
+def filter_events_view(user, permission: str):
+    """Affiche les événements filtrés selon la permission (logique SQL dans filters.py)."""
     dr = DataReader(user)
-    
+
     try:
-        all_events = dr.get_all_events()
-        if not all_events:
+        events = dr.get_filtered_events(permission)
+        if not events:
             click.echo("Aucun événement trouvé.")
             return
-        
-        # Show filter options
-        click.echo("\nCritères de filtrage :")
-        click.echo("1. Tous les événements")
-        click.echo("2. Événements sans support assigné")
-        click.echo("3. Événements par période de date")
-        
-        choice = click.prompt("Choisissez un critère", type=int)
-        
-        filtered_events = all_events
-        
-        if choice == 2:
-            filtered_events = [e for e in all_events if e.get('support_contact_id') is None]
-            click.echo(f"Filtrage : événements sans support ({len(filtered_events)} trouvé(s))")
-        elif choice == 3:
-            start_filter = click.prompt("Date début filtre (AAA-MM-JJ)", type=str)
-            end_filter = click.prompt("Date fin filtre (AAA-MM-JJ)", type=str)
-            filtered_events = [
-                e for e in all_events 
-                if start_filter <= e.get('date_start', '') <= end_filter
-            ]
-            click.echo(f"Filtrage : période {start_filter} à {end_filter} ({len(filtered_events)} trouvé(s))")
-        
-        # Display results
-        if filtered_events:
-            click.echo(f"\n{'='*60}")
-            click.echo(f"Événements filtrés ({len(filtered_events)})")
-            click.echo(f"{'='*60}")
-            for event in filtered_events:
-                name = event.get('name', event.get('title', ''))
-                click.echo(f"ID {event['id']}: '{name}' | {event.get('date_start', '')} au {event.get('date_end', '')}")
-        else:
-            click.echo("Aucun événement correspond au filtre.")
-            
+
+        click.echo(f"\n{'='*60}")
+        click.echo(f"Événements filtrés ({len(events)})")
+        click.echo(f"{'='*60}")
+
+        for event in events:
+            name = event.get('name', '')
+            support = event.get('support_contact_id') or 'Non assigné'
+            click.echo(f"ID {event['id']}: '{name}' | {event.get('date_start', '')} au {event.get('date_end', '')} | Support: {support}")
+
     except PermissionError as pe:
         click.echo(f"Permission refusée : {pe}")
     except Exception as e:
         click.echo(f"Erreur : {e}")
 
-def filter_contracts_view(user):
-    """Affiche une liste filtrée des contrats selon des critères."""
+
+def filter_contracts_view(user, permission: str):
+    """Affiche les contrats filtrés selon la permission (logique SQL dans filters.py)."""
     dr = DataReader(user)
-    
+
     try:
-        all_contracts = dr.get_all_contracts()
-        if not all_contracts:
+        contracts = dr.get_filtered_contracts(permission)
+        if not contracts:
             click.echo("Aucun contrat trouvé.")
             return
-        
-        # Show filter options
-        click.echo("\nCritères de filtrage :")
-        click.echo("1. Tous les contrats")
-        click.echo("2. Contrats non signés")
-        click.echo("3. Contrats non entièrement payés")
-        
-        choice = click.prompt("Choisissez un critère", type=int)
-        
-        filtered_contracts = all_contracts
-        
-        if choice == 2:
-            filtered_contracts = [c for c in all_contracts if not c.get('is_signed', True)]
-            click.echo(f"Filtrage : contrats non signés ({len(filtered_contracts)} trouvé(s))")
-        elif choice == 3:
-            filtered_contracts = [c for c in all_contracts if c.get('remaining_amount', 0) > 0]
-            click.echo(f"Filtrage : contrats non entièrement payés ({len(filtered_contracts)} trouvé(s))")
-        
-        # Display results
-        if filtered_contracts:
-            click.echo(f"\n{'='*60}")
-            click.echo(f"Contrats filtrés ({len(filtered_contracts)})")
-            click.echo(f"{'='*60}")
-            for contract in filtered_contracts:
-                status = "✓ Signé" if contract.get('is_signed', False) else "✗ Non signé"
-                click.echo(f"ID {contract['id']}: {contract.get('total_amount', 0)}€ | {status} | Reste: {contract.get('remaining_amount', 0)}€")
-        else:
-            click.echo("Aucun contrat correspond au filtre.")
-            
+
+        click.echo(f"\n{'='*60}")
+        click.echo(f"Contrats filtrés ({len(contracts)})")
+        click.echo(f"{'='*60}")
+
+        for contract in contracts:
+            status = "✓ Signé" if contract.get('is_signed', False) else "✗ Non signé"
+            click.echo(f"ID {contract['id']}: {contract.get('total_amount', 0)}€ | {status} | Reste: {contract.get('remaining_amount', 0)}€")
+
     except PermissionError as pe:
         click.echo(f"Permission refusée : {pe}")
     except Exception as e:

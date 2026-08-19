@@ -31,6 +31,22 @@ class DataReader:
         finally:
             conn.close()
 
+    def _fetch_all_params(self, query: str, params: tuple) -> list[tuple]:
+        """Exécute une requête SELECT paramétrée et retourne toutes les lignes."""
+        try:
+            conn = get_db_connection()
+        except Exception as e:
+            print(f"ERREUR: connexion BDD impossible : {e}")
+            raise
+
+        try:
+            with conn.cursor() as cur:
+                cur.execute(query, params)
+                rows = cur.fetchall()
+            return rows
+        finally:
+            conn.close()
+
     # ==================== COLLABORATORS ====================
     
     def get_all_collaborators(self) -> list[dict]:
@@ -287,3 +303,78 @@ class DataReader:
                 }
         finally:
             conn.close()
+
+    # ==================== FILTERED QUERIES ====================
+
+    def get_filtered_events(self, permission: str) -> list[dict]:
+        """
+        Récupère les événements filtrés selon la permission.
+        La logique de filtrage (clause WHERE + params) est définie dans filters.py.
+
+        Args:
+            permission (str): Clé de permission correspondant à une fonction dans FILTERS.
+        Returns:
+            list[dict]: Événements filtrés.
+
+        Raises:
+            PermissionError: Si utilisateur non authentifié ou non autorisé.
+            KeyError: Si la permission n'est pas dans le registre FILTERS.
+        """
+        if self.user is None:
+            raise PermissionError("Utilisateur non authentifié.")
+        if not has_permission(self.user, permission):
+            raise PermissionError(f"Permission insuffisante : {permission}")
+
+        from app.controllers.filters import FILTERS
+        sql_where, params = FILTERS[permission](self.user)
+
+        query = (
+            f"SELECT id, name, client_name, client_contact, date_start, date_end, "
+            f"location, attendees, notes, contract_id, support_contact "
+            f"FROM events WHERE {sql_where}"
+        )
+        rows = self._fetch_all_params(query, params)
+        return [{
+            "id": r[0], "name": r[1], "client_name": r[2], "client_contact": r[3],
+            "date_start": r[4], "date_end": r[5], "location": r[6],
+            "attendees": r[7], "notes": r[8], "contract_id": r[9],
+            "support_contact_id": r[10]
+        } for r in rows]
+
+    def get_filtered_contracts(self, permission: str) -> list[dict]:
+        """
+        Récupère les contrats filtrés selon la permission.
+        La logique de filtrage (clause WHERE + params) est définie dans filters.py.
+
+        Args:
+            permission (str): Clé de permission correspondant à une fonction dans FILTERS.
+        Returns:
+            list[dict]: Contrats filtrés.
+
+        Raises:
+            PermissionError: Si utilisateur non authentifié ou non autorisé.
+            KeyError: Si la permission n'est pas dans le registre FILTERS.
+        """
+        if self.user is None:
+            raise PermissionError("Utilisateur non authentifié.")
+        if not has_permission(self.user, permission):
+            raise PermissionError(f"Permission insuffisante : {permission}")
+
+        from app.controllers.filters import FILTERS
+        sql_where, params = FILTERS[permission](self.user)
+
+        query = (
+            f"SELECT id, total_amount, remaining_amount, creation_date, "
+            f"is_signed, client_id, commercial_contact_id "
+            f"FROM contracts WHERE {sql_where}"
+        )
+        rows = self._fetch_all_params(query, params)
+        return [{
+            "id": r[0],
+            "total_amount": r[1],
+            "remaining_amount": r[2],
+            "creation_date": r[3],
+            "is_signed": r[4],
+            "client_id": r[5],
+            "commercial_contact_id": r[6]
+        } for r in rows]

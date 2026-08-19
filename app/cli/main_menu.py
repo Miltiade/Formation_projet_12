@@ -56,7 +56,7 @@ def show_main_menu(user):
             "delete_collaborator": "Supprimer un collaborateur",
             "create_contract": "Créer un contrat",
             "update_contract": "Modifier un contrat",
-            "filter_events_view": "Filtrer les événements",
+            "filter_unassigned_events": "Filtrer les événements sans support",
             "assign_event_support": "Assigner support à un événement",
         },
         "commercial": {
@@ -64,11 +64,12 @@ def show_main_menu(user):
             "create_contract": "Créer un contrat",
             "update_assigned_client": "Modifier client associé",
             "update_assigned_contract": "Modifier contrat associé",
-            "filter_contracts_view": "Filtrer les contrats",
+            "filter_unsigned_contracts": "Filtrer les contrats non signés",
+            "filter_unpaid_contracts": "Filtrer les contrats impayés",
             "create_event": "Créer un événement",
         },
         "support": {
-            "filter_events_view": "Filtrer les événements assignés",
+            "filter_own_events": "Filtrer mes événements assignés",
             "update_assigned_event": "Modifier événement assigné",
         },
     }
@@ -102,16 +103,18 @@ def show_main_menu(user):
         "create_collaborator": create_collaborator,
         "update_collaborator": update_collaborator,
         "delete_collaborator": delete_collaborator,
-        "filter_events_view": filter_events_view,
         "assign_event_support": assign_event_support,
         "create_client": create_client,
         "update_assigned_client": update_assigned_client,
         "create_contract": create_contract,
         "update_contract": update_contract,
         "update_assigned_contract": update_assigned_contract,
-        "filter_contracts_view": filter_contracts_view,
         "create_event": create_event,
         "update_assigned_event": update_assigned_event,
+        "filter_unassigned_events": lambda user: filter_events_view(user, "filter_unassigned_events"),
+        "filter_own_events": lambda user: filter_events_view(user, "filter_own_events"),
+        "filter_unsigned_contracts": lambda user: filter_contracts_view(user, "filter_unsigned_contracts"),
+        "filter_unpaid_contracts": lambda user: filter_contracts_view(user, "filter_unpaid_contracts"),
     }
 
 

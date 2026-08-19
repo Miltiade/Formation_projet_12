@@ -486,10 +486,11 @@ class DataWriter:
             raise PermissionError("Utilisateur non authentifié.")
 
         if self.user.role == "commercial":
-            # Droit commercial uniquement sur ses contrats assignés
+            # Permission commercial : uniquement sur ses contrats assignés
             if not has_permission(self.user, "create_client"):
                 raise PermissionError("Permission insuffisante pour créer un contrat.")
         elif self.user.role == "gestion":
+            # Permission support : sur aucun contrat
             if not has_permission(self.user, "create_contract"):
                 raise PermissionError("Permission insuffisante pour créer un contrat.")
         else:

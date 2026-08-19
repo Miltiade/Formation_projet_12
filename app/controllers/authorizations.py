@@ -18,6 +18,7 @@ ROLE_PERMISSIONS = {
 
     #  GESTION :
        # Créer, mettre à jour et supprimer des collaborateurs; 
+       # Créer et modifier tous les contrats;
        # Filtrer l’affichage des événements, par exemple : afficher tous les événements qui n’ont pas de "support" associé
        # Modifier des événements (pour associer un collaborateur support à l’événement)
     "gestion":
@@ -27,12 +28,12 @@ ROLE_PERMISSIONS = {
          "delete_collaborator",
          "create_contract",
          "update_contract",       
-         "filter_events_view",
-        "assign_event_support"
+         "filter_unassigned_events",
+         "assign_event_support"
          ],
 
     # COMMERCIAL :
-        # Créer un client (le client leur sera automatiquement associé)
+        # Créer un client (le client leur est automatiquement associé)
         # Mettre à jour les clients dont ils sont responsables
         # Modifier/mettre à jour les contrats des clients dont ils sont responsables
         # Filtrer l’affichage des contrats, par exemple : afficher tous les contrats pas encore signés, ou pas encore entièrement payés.
@@ -42,7 +43,8 @@ ROLE_PERMISSIONS = {
          "create_client",
          "update_assigned_client", 
          "update_assigned_contract", 
-         "filter_contracts_view", 
+         "filter_unsigned_contracts",
+         "filter_unpaid_contracts", 
          "create_event"
          ],
     
@@ -52,7 +54,7 @@ ROLE_PERMISSIONS = {
         # Mettre à jour les événements dont ils sont responsables    
     "support":
         [
-         "filter_events_view",         
+         "filter_own_events",         
          "update_assigned_event"
          ],
 }
