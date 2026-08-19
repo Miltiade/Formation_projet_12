@@ -397,14 +397,19 @@ class DataWriter:
         if self.user is None or not has_permission(self.user, "update_assigned_client"):
             raise PermissionError("Permission insuffisante pour modifier ce client.")
 
-        # Vérifier que le client existe
+        # Vérifier que le client existe + propriété
         conn = get_db_connection()
         try:
             with conn.cursor() as cur:
-                cur.execute("SELECT id FROM clients WHERE id = %s", (client_id,))
+                cur.execute("SELECT id, commercial_contact FROM clients WHERE id = %s", (client_id,))
                 existing = cur.fetchone()
                 if existing is None:
                     raise LookupError(f"Client ID {client_id} non trouvé.")
+
+                # Ownership: seul Commercial atteint ici (Gestion n'a pas cette permission).
+                # Commercial ne peut modifier que ses propres clients.
+                if existing[1] != self.user.id:
+                    raise PermissionError("Vous n'êtes pas responsable de ce client.")
 
             updates = []
             params = []
@@ -545,16 +550,21 @@ class DataWriter:
         if not allowed:
             raise PermissionError("Permission insuffisante pour modifier ce contrat.")
 
-        # Vérifier que le contrat existe
+        # Vérifier que le contrat existe + propriété
         conn = get_db_connection()
         try:
             with conn.cursor() as cur:
-                cur.execute("SELECT total_amount FROM contracts WHERE id = %s", (contract_id,))
+                cur.execute("SELECT total_amount, commercial_contact_id FROM contracts WHERE id = %s", (contract_id,))
                 existing = cur.fetchone()
                 if existing is None:
                     raise LookupError(f"Contrat ID {contract_id} non trouvé.")
                 # On récupère total_amount existant si besoin pour validation restante
                 existing_total = existing[0]
+
+                # Ownership: Gestion (update_contract) = accès total ;
+                # Commercial (update_assigned_contract) = ses contrats seulement.
+                if not has_permission(self.user, "update_contract") and existing[1] != self.user.id:
+                    raise PermissionError("Vous n'êtes pas responsable de ce contrat.")
 
             # Valider les champs reçus
 
@@ -746,14 +756,18 @@ class DataWriter:
         conn = get_db_connection()
         try:
             with conn.cursor() as cur:
-                # Vérifier que l'événement existe
-                cur.execute("SELECT * FROM events WHERE id = %s", (event_id,))
+                # Vérifier que l'événement existe + propriété
+                cur.execute("SELECT id, support_contact FROM events WHERE id = %s", (event_id,))
                 existing = cur.fetchone()
                 if existing is None:
                     raise LookupError(f"Événement ID {event_id} non trouvé.")
+
+                # Ownership: Gestion (assign_event_support) = accès total ;
+                # Support (update_assigned_event) = ses événements seulement.
+                if not has_permission(self.user, "assign_event_support") and existing[1] != self.user.id:
+                    raise PermissionError("Vous n'êtes pas responsable de cet événement.")
                 
-                # Récupérer valeurs actuelles pour validation
-                # (colonne index dépend de votre schéma DB)
+            # Récupérer valeurs actuelles pour validation
             
             updates = []
             params = []
