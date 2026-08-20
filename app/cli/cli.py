@@ -6,6 +6,17 @@ How it works:
 """
 
 import click
+import sentry_sdk
+from utils.config import SENTRY_DSN
+
+# ── Sentry initialization ──────────────────────────────────────────
+# Must run BEFORE any app code so Sentry hooks are active early.
+sentry_sdk.init(
+    dsn=SENTRY_DSN,
+    traces_sample_rate=1.0, # sends all performance traces
+    send_default_pii=False,  # Do NOT send personally identifiable info
+)
+
 from app.cli.welcome import run_welcome_loop
 
 @click.group()
