@@ -21,7 +21,7 @@ def view_all_clients(user):
         click.echo(f"{'='*60}")
         
         for client in clients:
-            click.echo(f"ID {client['id']}: {client.get('full_name', client.get('name', ''))} | {client.get('email', '')} | {client.get('company_name', '')}")
+            click.echo(f"ID {client['id']}: {client.get('full_name', '')} | {client.get('email', '')} | {client.get('company_name', '')}")
             
     except PermissionError as pe:
         click.echo(f"Permission refusée : {pe}")
@@ -64,10 +64,10 @@ def view_all_events(user):
         click.echo(f"\n{'='*60}")
         click.echo(f"Tous les événements ({len(events)})")
         click.echo(f"{'='*60}")
-        
+
         for event in events:
-            name = event.get('name', event.get('title', ''))
-            click.echo(f"ID {event['id']}: '{name}' | {event.get('date_start', '')} au {event.get('end_date', event.get('date_end', ''))}")
+            name = event.get('name', '')
+            click.echo(f"ID {event['id']}: '{name}' | {event.get('date_start', '')} au {event.get('date_end', '')}")
             
     except PermissionError as pe:
         click.echo(f"Permission refusée : {pe}")
@@ -141,7 +141,7 @@ def view_event(user):
         click.echo(f"\n{'='*60}")
         click.echo(f"Détails de l'événement ID {event['id']}")
         click.echo(f"{'='*60}")
-        click.echo(f"Nom : {event.get('name', event.get('title', ''))}")
+        click.echo(f"Nom : {event.get('name', '')}")
         click.echo(f"Client : {event.get('client_name', '')}")
         click.echo(f"Contact client : {event.get('client_contact', '')}")
         click.echo(f"Période : {event.get('date_start', '')} au {event.get('date_end', '')}")
