@@ -1,6 +1,7 @@
 """Handler for read-only views and filtered listings."""
 
 import click
+import sentry_sdk
 from app.controllers.read_data_from_db import DataReader
 from app.cli.cli_utils import select_record
 
@@ -26,6 +27,7 @@ def view_all_clients(user):
     except PermissionError as pe:
         click.echo(f"Permission refusée : {pe}")
     except Exception as e:
+        sentry_sdk.capture_exception(e)
         click.echo(f"Erreur : {e}")
 
 def view_all_contracts(user):
@@ -49,6 +51,7 @@ def view_all_contracts(user):
     except PermissionError as pe:
         click.echo(f"Permission refusée : {pe}")
     except Exception as e:
+        sentry_sdk.capture_exception(e)
         click.echo(f"Erreur : {e}")
 
 def view_all_events(user):
@@ -72,6 +75,7 @@ def view_all_events(user):
     except PermissionError as pe:
         click.echo(f"Permission refusée : {pe}")
     except Exception as e:
+        sentry_sdk.capture_exception(e)
         click.echo(f"Erreur : {e}")
 
 def view_client(user):
@@ -99,6 +103,7 @@ def view_client(user):
     except LookupError as le:
         click.echo(f"Client introuvable : {le}")
     except Exception as e:
+        sentry_sdk.capture_exception(e)
         click.echo(f"Erreur : {e}")
 
 def view_contract(user):
@@ -126,6 +131,7 @@ def view_contract(user):
     except LookupError as le:
         click.echo(f"Contrat introuvable : {le}")
     except Exception as e:
+        sentry_sdk.capture_exception(e)
         click.echo(f"Erreur : {e}")
 
 def view_event(user):
@@ -156,6 +162,7 @@ def view_event(user):
     except LookupError as le:
         click.echo(f"Événement introuvable : {le}")
     except Exception as e:
+        sentry_sdk.capture_exception(e)
         click.echo(f"Erreur : {e}")
 
 # ==================== FILTERED VIEWS ====================
@@ -182,6 +189,7 @@ def filter_events_view(user, permission: str):
     except PermissionError as pe:
         click.echo(f"Permission refusée : {pe}")
     except Exception as e:
+        sentry_sdk.capture_exception(e)
         click.echo(f"Erreur : {e}")
 
 
@@ -206,4 +214,5 @@ def filter_contracts_view(user, permission: str):
     except PermissionError as pe:
         click.echo(f"Permission refusée : {pe}")
     except Exception as e:
+        sentry_sdk.capture_exception(e)
         click.echo(f"Erreur : {e}")

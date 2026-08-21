@@ -1,4 +1,5 @@
 import click
+import sentry_sdk
 from app.controllers.write_data_to_db import DataWriter
 from app.controllers.read_data_from_db import DataReader
 from app.cli.cli_utils import select_record, optional_prompt
@@ -48,6 +49,15 @@ def create_contract(user):
             client_id=client_id,
             commercial_contact_id=commercial_contact_id
         )
+
+        # Sentry breadcrumb: business event — contract signed at creation
+        if is_signed:
+            sentry_sdk.add_breadcrumb(
+                category="contract",
+                message=f"Contract signed (created): id={contract.id}, amount={total_amount}€",
+                level="info",
+            )
+
         click.echo(f"→ Contrat créé : ID {contract.id}, montant={contract.total_amount}€")
 
 
@@ -56,6 +66,7 @@ def create_contract(user):
     except ValueError as ve:
         click.echo(f"Erreur de saisie : {ve}")
     except Exception as e:
+        sentry_sdk.capture_exception(e)
         click.echo(f"Erreur lors de la création : {e}")
 
 def update_contract(user):
@@ -125,6 +136,15 @@ def update_assigned_contract(user):
 
         # Apply changes to contract
         dw.update_contract(selected_id, **changes)
+
+        # Sentry breadcrumb: business event — contract signed
+        if "is_signed" in changes and changes["is_signed"]:
+            sentry_sdk.add_breadcrumb(
+                category="contract",
+                message=f"Contract signed (updated): id={selected_id}",
+                level="info",
+            )
+    
         click.echo("→ Contrat mis à jour.")
 
     except PermissionError as pe:
@@ -132,4 +152,5 @@ def update_assigned_contract(user):
     except ValueError as ve:
         click.echo(f"Erreur de saisie : {ve}")
     except Exception as e:
+        sentry_sdk.capture_exception(e)
         click.echo(f"Erreur lors de la mise à jour : {e}")

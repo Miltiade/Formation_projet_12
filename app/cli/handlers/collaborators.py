@@ -1,4 +1,5 @@
 import click
+import sentry_sdk
 from app.controllers.write_data_to_db import DataWriter
 from app.controllers.read_data_from_db import DataReader
 from app.cli.cli_utils import select_record, optional_prompt
@@ -27,6 +28,14 @@ def create_collaborator(user):
 
         # Create collaborator
         collaborator = dw.create_collaborator(username, email, password, department_name)
+
+        # Sentry breadcrumb: business event — collaborator created
+        sentry_sdk.add_breadcrumb(
+            category="collaborator",
+            message=f"Collaborator created: id={collaborator.id}, username={collaborator.username}",
+            level="info",
+        )
+
         click.echo(f"→ Collaborateur créé : ID {collaborator.id}, username={collaborator.username}, rôle={collaborator.role}")
 
     except PermissionError as pe:
@@ -34,6 +43,7 @@ def create_collaborator(user):
     except ValueError as ve:
         click.echo(f"Erreur de saisie : {ve}")
     except Exception as e:
+        sentry_sdk.capture_exception(e)
         click.echo(f"Erreur lors de la création : {e}")
 
 def update_collaborator(user):
@@ -92,6 +102,14 @@ def update_collaborator(user):
 
         # Update collaborator
         dw.update_collaborator(selected_id, **changes)
+
+        # Sentry breadcrumb: business event — collaborator updated
+        sentry_sdk.add_breadcrumb(
+            category="collaborator",
+            message=f"Collaborator updated: id={selected_id}",
+            level="info",
+        )
+
         click.echo("→ Collaborateur mis à jour.")
 
     except PermissionError as pe:
@@ -99,6 +117,7 @@ def update_collaborator(user):
     except ValueError as ve:
         click.echo(f"Erreur de saisie : {ve}")
     except Exception as e:
+        sentry_sdk.capture_exception(e)
         click.echo(f"Erreur lors de la mise à jour : {e}")
 
 def delete_collaborator(user):
@@ -140,4 +159,5 @@ def delete_collaborator(user):
     except LookupError as le:
         click.echo(f"Collaborateur introuvable : {le}")
     except Exception as e:
+        sentry_sdk.capture_exception(e)
         click.echo(f"Erreur lors de la suppression : {e}")

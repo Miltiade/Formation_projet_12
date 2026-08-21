@@ -1,6 +1,7 @@
 # === Gestion des événements ===
 
 import click
+import sentry_sdk
 from app.controllers.write_data_to_db import DataWriter
 from app.controllers.read_data_from_db import DataReader
 from app.cli.cli_utils import select_record, optional_prompt
@@ -67,6 +68,7 @@ def create_event(user):
         click.echo(f"Erreur de saisie : {ve}")
         return
     except Exception as e:
+        sentry_sdk.capture_exception(e)
         click.echo(f"Erreur lors de la création : {e}")
         return
 
@@ -142,6 +144,7 @@ def update_assigned_event(user):
     except ValueError as ve:
         click.echo(f"Erreur de saisie : {ve}")
     except Exception as e:
+        sentry_sdk.capture_exception(e)
         click.echo(f"Erreur lors de la mise à jour : {e}")
 
 def assign_event_support(user):
@@ -177,4 +180,5 @@ def assign_event_support(user):
     except PermissionError as pe:
         click.echo(f"Permission refusée : {pe}")
     except Exception as e:
+        sentry_sdk.capture_exception(e)
         click.echo(f"Erreur lors de l'assignment : {e}")

@@ -7,6 +7,7 @@ propose logout.
 """
 
 import click
+import sentry_sdk
 from app.controllers.authorizations import get_permissions
 from app.cli.handlers import (
     create_collaborator, update_collaborator, delete_collaborator,
@@ -159,4 +160,5 @@ def show_main_menu(user):
         try:
             handler(user)
         except Exception as e:
+            sentry_sdk.capture_exception(e)
             click.echo(f"Erreur lors de l'exécution de '{label_chosen}': {e}")
