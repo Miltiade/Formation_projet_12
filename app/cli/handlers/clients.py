@@ -20,12 +20,12 @@ def create_client(user):
 
     try:
         full_name = click.prompt("Nom complet", type=str)
-        email = click.prompt("Email", type=str)
+        email = click.prompt("Email (***@***.**)", type=str)
         phone = click.prompt("Telephone", type=str)
         company_name = click.prompt("Nom de l'entreprise", type=str)
-        creation_date = click.prompt("Date de création", type=str)        # ISO format, e.g. '2025-01-15'
+        creation_date = click.prompt("Date de création (AAAA-MM-JJ)", type=str)        # ISO format, e.g. '2025-01-15'
         commercial_contact_id = select_record(
-            "collaborateur",
+            "contact commercial",
             lambda: dr.get_all_collaborators(),
             display_field="username"
         )

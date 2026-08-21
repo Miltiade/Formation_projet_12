@@ -347,13 +347,13 @@ class DataWriter:
 
         # Insertion en base
         sql = """
-            INSERT INTO clients (full_name, email, phone, company_name, creation_date, commercial_contact)
-            VALUES (%s, %s, %s, %s, %s, %s)
+            INSERT INTO clients (full_name, email, phone, company_name, creation_date, last_update_date, commercial_contact)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
         """
         try:
             conn = get_db_connection()
             with conn.cursor() as cur:
-                cur.execute(sql, (full_name, email, phone, company_name, creation_date, commercial_contact_id))
+                cur.execute(sql, (full_name, email, phone, company_name, creation_date, creation_date, commercial_contact_id))
                 conn.commit()
                 client_id = cur.lastrowid
         finally:
